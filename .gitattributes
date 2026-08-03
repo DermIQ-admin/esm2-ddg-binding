@@ -1,0 +1,14 @@
+# Normalize line endings so the repo reads identically on Windows, Linux and macOS.
+# Without this, Git-on-Windows checks files out as CRLF and a Linux clone can show the
+# entire repo as modified. Text files are stored LF in the repo and checked out native.
+* text=auto
+
+# Notebooks are JSON — keep them LF everywhere so diffs stay clean.
+*.ipynb text eol=lf
+
+# Never touch binary artifacts.
+*.png binary
+*.pt  binary
+*.pth binary
+*.ckpt binary
+*.safetensors binary

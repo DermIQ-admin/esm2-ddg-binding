@@ -1,0 +1,42 @@
+# --- Python -----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# --- Environment ------------------------------------------------------------
+.venv/
+venv/
+.env
+
+# --- Data -------------------------------------------------------------------
+# SKEMPI's raw CSV is not ours to redistribute, and it bloats the repo.
+# src/data/download.py regenerates it. Keep the directory, drop the contents.
+data/raw/*
+!data/raw/.gitkeep
+
+# data/processed/ is deliberately NOT ignored — PLAN.md section 5 wants the
+# cleaned splits committed so results are reproducible without re-downloading.
+
+# --- Model artifacts --------------------------------------------------------
+checkpoints/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+
+# --- Experiment tracking ----------------------------------------------------
+wandb/
+.wandb/
+
+# --- Caches -----------------------------------------------------------------
+# Hugging Face model cache, if HF_HOME is ever pointed inside the repo.
+.cache/
+embeddings_cache/
+
+# --- OS / editor ------------------------------------------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

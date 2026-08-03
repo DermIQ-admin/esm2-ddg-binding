@@ -1,0 +1,58 @@
+# Configuration for the ESM-2 ddG(binding) regressor.
+#
+# Values here are taken from PLAN.md, not invented. Section references are
+# noted so any value can be traced back to the decision that produced it.
+
+seed: 42                                    # section 6.5
+
+data:
+  raw_path: data/raw/skempi_v2.csv
+  processed_dir: data/processed
+  separator: ";"                            # section 6.2 — VERIFY against the real file
+  # Section 6.4 filtering rules for v1
+  single_point_only: true                   # section 3 — multi-point is out of scope
+  drop_abolished_binding: true              # section 6.3 — inequalities, not clean Kd
+  max_sequence_length: null                 # section 6.4 — decide empirically from EDA
+
+thermodynamics:
+  gas_constant: 1.987e-3                    # kcal/(mol*K), section 6.3
+  default_temperature_k: 298.15             # fallback when SKEMPI gives no Temperature
+
+split:
+  strategy: complex                         # "complex" (primary) or "mutation" (comparison)
+  test_size: 0.15                           # section 6.5
+  val_size: 0.15                            # of the original total, per section 6.5's math
+  random_state: 42
+
+model:
+  backbone: facebook/esm2_t30_150M_UR50D    # section 3 — 150M is the primary result
+  freeze_backbone: false                    # true -> the section 7.2 frozen baseline
+  pooling: mean                             # section 7.3 — "position" is the planned v2
+  head_hidden_dim: 256
+  dropout: 0.1
+
+training:
+  learning_rate: 2.0e-5                     # section 8
+  loss: huber                               # section 8 — deliberate over MSE (ddG outliers)
+  huber_delta: 1.0
+  batch_size: 8                             # starting point; 24GB allows tuning upward
+  gradient_accumulation_steps: 1
+  epochs: 10
+  # Ada (sm_89) supports bf16, which needs no GradScaler. See the note in
+  # src/train.py about section 8's snippet using the deprecated fp16 API.
+  mixed_precision: bf16
+  checkpoint_every_n_steps: 500
+
+baselines:
+  zero_shot_model: facebook/esm2_t12_35M_UR50D   # section 7.1's example
+  embedding_cache_dir: embeddings_cache
+
+evaluation:
+  primary_metric: spearman                  # section 9
+  also_report: [pearson, rmse, mae]
+  metrics_path: results/metrics.json
+  figures_dir: results/figures
+
+wandb:
+  enabled: false                            # opt in after `wandb login`
+  project: esm2-ddg-binding

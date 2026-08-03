@@ -1,0 +1,52 @@
+# Pinned to what is actually installed and verified working on:
+#   Windows 11 · Python 3.14.4 · NVIDIA RTX 4090 (Ada, sm_89) · driver 610.62 / CUDA 13.3
+#
+# These are the DIRECT dependencies only, not a full `pip freeze` (158 packages in the
+# venv). Pinning only what we chose keeps this readable and lets pip resolve transitive
+# versions itself; `pip freeze > requirements.lock` if a byte-exact lock is ever needed.
+#
+#   pip install -r requirements.txt
+#
+# --- PyTorch / CUDA -----------------------------------------------------------------
+# The `+cu130` local version tag identifies the CUDA 13.0 build. It is NOT on PyPI, so
+# the extra index below is required — without it pip resolves to the CPU-only wheel and
+# training silently falls back to CPU.
+#
+# For a CPU-only install, delete the --extra-index-url line and use `torch==2.13.0`.
+# For a different CUDA version, swap cu130 for your channel (cu128 / cu132) — see
+# https://pytorch.org/get-started/locally/ and match it to your driver.
+#
+# torchvision and torchaudio are deliberately omitted: this project has no image or
+# audio component, and they add ~1 GB plus a version-pinning constraint for nothing.
+
+--extra-index-url https://download.pytorch.org/whl/cu130
+
+torch==2.13.0+cu130
+
+# --- Model / training stack ---------------------------------------------------------
+# NOTE: transformers is 5.x. PLAN.md section 7's snippets were written against 4.x.
+# The plan's own constraint (>=4.40) permits this, and AutoModel / AutoTokenizer /
+# AutoModelForMaskedLM are stable core APIs. If those snippets break, the fallback is
+# `transformers>=4.40,<5`.
+transformers==5.14.1
+peft==0.20.0                 # LoRA — optional on 24GB, a speed lever not a memory need
+accelerate==1.14.0
+datasets==5.0.1
+
+# --- Data / numerics ----------------------------------------------------------------
+numpy==2.5.1
+pandas==3.0.5
+scipy==1.18.0
+scikit-learn==1.9.0
+biopython==1.87
+
+# --- Plotting -----------------------------------------------------------------------
+matplotlib==3.11.1
+seaborn==0.13.2
+
+# --- Tooling ------------------------------------------------------------------------
+wandb==0.28.1                # experiment tracking; run `wandb login` before enabling
+jupyter==1.1.1
+tqdm==4.70.0
+PyYAML==6.0.3                # configs/config.yaml  (beyond PLAN.md section 4.5's list)
+pytest==9.1.1                # tests/test_splits.py (beyond PLAN.md section 4.5's list)
