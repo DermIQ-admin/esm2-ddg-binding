@@ -68,9 +68,10 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import torch
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset, Sampler
 
 from src.data.parse_skempi import apply_mutation
 
@@ -254,11 +255,106 @@ def make_collate_fn(tokenizer, pad_to_multiple_of: int | None = 8):
     return collate
 
 
+class TokenBudgetBatchSampler(Sampler):
+    """Batches capped by TOTAL TOKENS, not by example count.
+
+    WHY A FIXED batch_size IS NOT SAFE HERE
+    ---------------------------------------
+    Our complexes run from 60 to 2048 tokens. Every batch is padded to its
+    longest member, so a fixed batch of 8 costs 8 x 400 = 3200 tokens most of
+    the time and 8 x 2048 = 16384 tokens when it happens to draw long ones — a
+    4x swing in activation memory from one step to the next.
+
+    Measured on this 4090: the 150M at 4096 tokens per step peaks at 10.9 GB.
+    Four times that does not fit, and on Windows it does not raise
+    OutOfMemoryError either — CUDA spills into shared system memory and the step
+    runs ~30x slower instead of failing. A training run would appear to work
+    while taking all night.
+
+    Capping tokens instead makes the memory ceiling a property of the sampler
+    rather than a matter of luck. It also cuts padding waste, because sorting by
+    length puts similar-length sequences together.
+
+    RANDOMNESS IS PRESERVED. Sorting strictly by length would make each batch a
+    fixed set of examples every epoch. Instead we shuffle, cut into large
+    chunks, sort only WITHIN a chunk, then shuffle the finished batches — so
+    batch composition still varies between epochs while lengths stay similar
+    inside any one batch. This is the standard "bucketing" trick.
+    """
+
+    def __init__(
+        self,
+        lengths: list[int],
+        max_tokens_per_batch: int = 8192,
+        max_batch_size: int = 8,
+        shuffle: bool = True,
+        seed: int = 42,
+        chunk_multiplier: int = 50,
+    ) -> None:
+        self.lengths = lengths
+        self.max_tokens_per_batch = max_tokens_per_batch
+        self.max_batch_size = max_batch_size
+        self.shuffle = shuffle
+        self.seed = seed
+        self.chunk_size = max_batch_size * chunk_multiplier
+        self.epoch = 0
+
+        longest = max(lengths) + TOKENIZER_OVERHEAD
+        if longest > max_tokens_per_batch:
+            raise ValueError(
+                f"a single sequence needs {longest} tokens but the batch budget "
+                f"is {max_tokens_per_batch} — raise max_tokens_per_batch or "
+                f"lower MAX_TOKENS"
+            )
+
+    def _build_batches(self) -> list[list[int]]:
+        rng = np.random.default_rng(self.seed + self.epoch)
+        order = np.arange(len(self.lengths))
+        if self.shuffle:
+            rng.shuffle(order)
+
+        batches: list[list[int]] = []
+        for start in range(0, len(order), self.chunk_size):
+            chunk = order[start:start + self.chunk_size]
+            chunk = chunk[np.argsort([self.lengths[i] for i in chunk], kind="stable")]
+
+            batch: list[int] = []
+            longest = 0
+            for i in chunk:
+                candidate = max(longest, self.lengths[i] + TOKENIZER_OVERHEAD)
+                # The cost of a padded batch is (rows x longest row), not the
+                # sum of the row lengths — that is what we must bound.
+                if batch and ((len(batch) + 1) * candidate > self.max_tokens_per_batch
+                              or len(batch) >= self.max_batch_size):
+                    batches.append(batch)
+                    batch, longest = [int(i)], self.lengths[i] + TOKENIZER_OVERHEAD
+                else:
+                    batch.append(int(i))
+                    longest = candidate
+            if batch:
+                batches.append(batch)
+
+        if self.shuffle:
+            rng.shuffle(batches)
+        return batches
+
+    def set_epoch(self, epoch: int) -> None:
+        """Change the shuffle without changing the seed, so runs stay reproducible."""
+        self.epoch = epoch
+
+    def __iter__(self):
+        return iter(self._build_batches())
+
+    def __len__(self) -> int:
+        return len(self._build_batches())
+
+
 def build_dataloaders(
     tokenizer,
     split_column: str = "split_pdb_id",
     batch_size: int = 8,
     max_tokens: int = MAX_TOKENS,
+    max_tokens_per_batch: int | None = 8192,
     processed_dir: Path = PROCESSED_DIR,
     num_workers: int = 0,
 ) -> dict[str, DataLoader]:
@@ -283,12 +379,29 @@ def build_dataloaders(
             max_tokens=max_tokens,
             verbose=(i == 0),  # the length policy report is identical each time
         )
-        loaders[split] = DataLoader(
-            dataset,
-            batch_size=batch_size,
+
+        if max_tokens_per_batch is None:
+            # Fixed-size batching. Simple, but see TokenBudgetBatchSampler for
+            # why it is not safe on this dataset without a small batch_size.
+            loaders[split] = DataLoader(
+                dataset, batch_size=batch_size, shuffle=(split == "train"),
+                collate_fn=collate, num_workers=num_workers,
+            )
+            continue
+
+        # `batch_sampler` yields LISTS of indices, so it replaces batch_size,
+        # shuffle and sampler all at once — passing any of them alongside it
+        # raises. Val/test are bounded too: evaluation runs the same forward
+        # pass and would spill on a long batch just as training would, but they
+        # do not shuffle, so their batches are identical every epoch.
+        sampler = TokenBudgetBatchSampler(
+            lengths=dataset.df["length"].tolist(),
+            max_tokens_per_batch=max_tokens_per_batch,
+            max_batch_size=batch_size,
             shuffle=(split == "train"),
-            collate_fn=collate,
-            num_workers=num_workers,
+        )
+        loaders[split] = DataLoader(
+            dataset, batch_sampler=sampler, collate_fn=collate, num_workers=num_workers,
         )
     return loaders
 
