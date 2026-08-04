@@ -1,0 +1,2019 @@
+{
+  "zero_shot_esm2_t12_35M_UR50D": {
+    "name": "zero_shot_esm2_t12_35M_UR50D",
+    "ranking_only": true,
+    "coverage": {
+      "predicted": 4814,
+      "available": 4829,
+      "fraction": 0.9969
+    },
+    "overall": {
+      "n": 4814,
+      "spearman": 0.06756182598551103,
+      "pearson": 0.0143853349916037,
+      "rmse": null,
+      "mae": null
+    },
+    "splits": {
+      "split_mutation": {
+        "test": {
+          "n": 724,
+          "spearman": 0.03825043926979295,
+          "pearson": 0.017307054115384732,
+          "rmse": null,
+          "mae": null
+        },
+        "train": {
+          "n": 3367,
+          "spearman": 0.07057785818891088,
+          "pearson": 0.009398048684169562,
+          "rmse": null,
+          "mae": null
+        },
+        "val": {
+          "n": 723,
+          "spearman": 0.0897688401074244,
+          "pearson": 0.03585343822858616,
+          "rmse": null,
+          "mae": null
+        }
+      },
+      "split_pdb_id": {
+        "test": {
+          "n": 715,
+          "spearman": 0.018020876181215627,
+          "pearson": 0.027344692952388304,
+          "rmse": null,
+          "mae": null
+        },
+        "train": {
+          "n": 3374,
+          "spearman": 0.07243731474251998,
+          "pearson": 0.004336947965174021,
+          "rmse": null,
+          "mae": null
+        },
+        "val": {
+          "n": 725,
+          "spearman": 0.09280271009115498,
+          "pearson": 0.08947637173585168,
+          "rmse": null,
+          "mae": null
+        }
+      },
+      "split_hold_out_proteins": {
+        "test": {
+          "n": 724,
+          "spearman": -0.003867005874221397,
+          "pearson": -0.010815655224844851,
+          "rmse": null,
+          "mae": null
+        },
+        "train": {
+          "n": 3371,
+          "spearman": 0.05773558387587144,
+          "pearson": 0.0005321465313176933,
+          "rmse": null,
+          "mae": null
+        },
+        "val": {
+          "n": 719,
+          "spearman": 0.18351724467682567,
+          "pearson": 0.1147889154253533,
+          "rmse": null,
+          "mae": null
+        }
+      }
+    },
+    "error_analysis": {
+      "basis": "split_pdb_id == 'test'",
+      "n": 715,
+      "worst_complexes": [
+        {
+          "pdb_field": "4PWX_AB_CD",
+          "n": 18,
+          "mae": 4.354,
+          "ddg_std": 0.552
+        },
+        {
+          "pdb_field": "1DVF_AB_CD",
+          "n": 33,
+          "mae": 3.387,
+          "ddg_std": 1.245
+        },
+        {
+          "pdb_field": "1FC2_C_D",
+          "n": 23,
+          "mae": 3.067,
+          "ddg_std": 1.232
+        },
+        {
+          "pdb_field": "1FFW_A_B",
+          "n": 19,
+          "mae": 2.816,
+          "ddg_std": 0.865
+        },
+        {
+          "pdb_field": "2J0T_A_D",
+          "n": 16,
+          "mae": 2.3,
+          "ddg_std": 1.391
+        },
+        {
+          "pdb_field": "3F1S_A_B",
+          "n": 10,
+          "mae": 1.803,
+          "ddg_std": 2.191
+        },
+        {
+          "pdb_field": "2NZ9_DC_A",
+          "n": 19,
+          "mae": 1.755,
+          "ddg_std": 1.927
+        },
+        {
+          "pdb_field": "1BJ1_HL_VW",
+          "n": 10,
+          "mae": 1.667,
+          "ddg_std": 1.727
+        }
+      ],
+      "by_mutation_type": {
+        "involves_proline": {
+          "n": 18,
+          "spearman": -0.1311306318270008,
+          "pearson": -0.10404956877598807,
+          "rmse": null,
+          "mae": null
+        },
+        "involves_glycine": {
+          "n": 36,
+          "spearman": 0.42524149986316195,
+          "pearson": 0.31844071148052594,
+          "rmse": null,
+          "mae": null
+        },
+        "to_alanine": {
+          "n": 354,
+          "spearman": 0.020313266586791404,
+          "pearson": 0.029609771142755856,
+          "rmse": null,
+          "mae": null
+        },
+        "other": {
+          "n": 320,
+          "spearman": -0.04271172039955984,
+          "pearson": -0.0037496008872597315,
+          "rmse": null,
+          "mae": null
+        }
+      },
+      "by_interface_location": {
+        "COR": {
+          "n": 310,
+          "spearman": 0.02978692550344591,
+          "pearson": 0.01896852138202193,
+          "rmse": null,
+          "mae": null
+        },
+        "INT": {
+          "n": 39,
+          "spearman": -0.13064051305046184,
+          "pearson": -0.04437337496771741,
+          "rmse": null,
+          "mae": null
+        },
+        "RIM": {
+          "n": 197,
+          "spearman": -0.01853986953039083,
+          "pearson": 0.011853549376054824,
+          "rmse": null,
+          "mae": null
+        },
+        "SUP": {
+          "n": 78,
+          "spearman": -0.20547711339209657,
+          "pearson": -0.0676091683171465,
+          "rmse": null,
+          "mae": null
+        },
+        "SUR": {
+          "n": 91,
+          "spearman": 0.20804591575871198,
+          "pearson": 0.23594323365194322,
+          "rmse": null,
+          "mae": null
+        }
+      },
+      "large_effect": {
+        "threshold_kcal_per_mol": 3.0,
+        "n": 59,
+        "spearman": -0.1773465242550278,
+        "pearson": -0.06838686135246473,
+        "rmse": null,
+        "mae": null
+      },
+      "antibody_antigen": {
+        "n": 230,
+        "spearman": -0.07647401526643674,
+        "pearson": -0.051634719429020454,
+        "rmse": null,
+        "mae": null
+      }
+    }
+  },
+  "zero_shot_esm2_t30_150M_UR50D": {
+    "name": "zero_shot_esm2_t30_150M_UR50D",
+    "ranking_only": true,
+    "coverage": {
+      "predicted": 4814,
+      "available": 4829,
+      "fraction": 0.9969
+    },
+    "overall": {
+      "n": 4814,
+      "spearman": -0.06175161633439724,
+      "pearson": -0.10738989173446055,
+      "rmse": null,
+      "mae": null
+    },
+    "splits": {
+      "split_mutation": {
+        "test": {
+          "n": 724,
+          "spearman": -0.08233447301999035,
+          "pearson": -0.11285555515354002,
+          "rmse": null,
+          "mae": null
+        },
+        "train": {
+          "n": 3367,
+          "spearman": -0.0601512288285792,
+          "pearson": -0.11427091957708742,
+          "rmse": null,
+          "mae": null
+        },
+        "val": {
+          "n": 723,
+          "spearman": -0.040388519576785825,
+          "pearson": -0.06756869241577902,
+          "rmse": null,
+          "mae": null
+        }
+      },
+      "split_pdb_id": {
+        "test": {
+          "n": 715,
+          "spearman": 0.00533842918537538,
+          "pearson": -0.013622465271111394,
+          "rmse": null,
+          "mae": null
+        },
+        "train": {
+          "n": 3374,
+          "spearman": -0.08909642137491018,
+          "pearson": -0.12988568938579,
+          "rmse": null,
+          "mae": null
+        },
+        "val": {
+          "n": 725,
+          "spearman": 0.007097061468655132,
+          "pearson": -0.059305717647376174,
+          "rmse": null,
+          "mae": null
+        }
+      },
+      "split_hold_out_proteins": {
+        "test": {
+          "n": 724,
+          "spearman": -0.09747086851588331,
+          "pearson": -0.10598554251734897,
+          "rmse": null,
+          "mae": null
+        },
+        "train": {
+          "n": 3371,
+          "spearman": -0.08192566855266746,
+          "pearson": -0.1328941707962504,
+          "rmse": null,
+          "mae": null
+        },
+        "val": {
+          "n": 719,
+          "spearman": 0.07680740397839729,
+          "pearson": 0.027952221901316705,
+          "rmse": null,
+          "mae": null
+        }
+      }
+    },
+    "error_analysis": {
+      "basis": "split_pdb_id == 'test'",
+      "n": 715,
+      "worst_complexes": [
+        {
+          "pdb_field": "4PWX_AB_CD",
+          "n": 18,
+          "mae": 4.717,
+          "ddg_std": 0.552
+        },
+        {
+          "pdb_field": "1DVF_AB_CD",
+          "n": 33,
+          "mae": 3.817,
+          "ddg_std": 1.245
+        },
+        {
+          "pdb_field": "2J0T_A_D",
+          "n": 16,
+          "mae": 3.315,
+          "ddg_std": 1.391
+        },
+        {
+          "pdb_field": "1FFW_A_B",
+          "n": 19,
+          "mae": 3.262,
+          "ddg_std": 0.865
+        },
+        {
+          "pdb_field": "1BJ1_HL_VW",
+          "n": 10,
+          "mae": 2.987,
+          "ddg_std": 1.727
+        },
+        {
+          "pdb_field": "3F1S_A_B",
+          "n": 10,
+          "mae": 2.858,
+          "ddg_std": 2.191
+        },
+        {
+          "pdb_field": "1FC2_C_D",
+          "n": 23,
+          "mae": 2.854,
+          "ddg_std": 1.232
+        },
+        {
+          "pdb_field": "2JEL_LH_P",
+          "n": 40,
+          "mae": 2.543,
+          "ddg_std": 1.139
+        }
+      ],
+      "by_mutation_type": {
+        "involves_proline": {
+          "n": 18,
+          "spearman": -0.04336603572231522,
+          "pearson": -0.07675736574844647,
+          "rmse": null,
+          "mae": null
+        },
+        "involves_glycine": {
+          "n": 36,
+          "spearman": 0.4373752778700561,
+          "pearson": 0.29130648951823884,
+          "rmse": null,
+          "mae": null
+        },
+        "to_alanine": {
+          "n": 354,
+          "spearman": 0.03880607150742702,
+          "pearson": 0.03916714790992285,
+          "rmse": null,
+          "mae": null
+        },
+        "other": {
+          "n": 320,
+          "spearman": -0.07666098470288216,
+          "pearson": -0.10541032120525815,
+          "rmse": null,
+          "mae": null
+        }
+      },
+      "by_interface_location": {
+        "COR": {
+          "n": 310,
+          "spearman": -0.04501686337457697,
+          "pearson": -0.08336413690431385,
+          "rmse": null,
+          "mae": null
+        },
+        "INT": {
+          "n": 39,
+          "spearman": -0.01715481484501014,
+          "pearson": -0.13696258048536541,
+          "rmse": null,
+          "mae": null
+        },
+        "RIM": {
+          "n": 197,
+          "spearman": -0.03726567682683736,
+          "pearson": -0.0012025756793554278,
+          "rmse": null,
+          "mae": null
+        },
+        "SUP": {
+          "n": 78,
+          "spearman": -0.3982155956454963,
+          "pearson": -0.2344797036906042,
+          "rmse": null,
+          "mae": null
+        },
+        "SUR": {
+          "n": 91,
+          "spearman": 0.32040345516324154,
+          "pearson": 0.36582571146161014,
+          "rmse": null,
+          "mae": null
+        }
+      },
+      "large_effect": {
+        "threshold_kcal_per_mol": 3.0,
+        "n": 59,
+        "spearman": -0.2023644255012875,
+        "pearson": -0.30922475928265236,
+        "rmse": null,
+        "mae": null
+      },
+      "antibody_antigen": {
+        "n": 230,
+        "spearman": -0.02505286236475403,
+        "pearson": 0.006757967623254854,
+        "rmse": null,
+        "mae": null
+      }
+    }
+  },
+  "zero_shot_esm2_t30_150M_UR50D_context-chain": {
+    "name": "zero_shot_esm2_t30_150M_UR50D_context-chain",
+    "ranking_only": true,
+    "coverage": {
+      "predicted": 4814,
+      "available": 4829,
+      "fraction": 0.9969
+    },
+    "overall": {
+      "n": 4814,
+      "spearman": -0.09117762808262007,
+      "pearson": -0.16213198768046996,
+      "rmse": null,
+      "mae": null
+    },
+    "splits": {
+      "split_mutation": {
+        "test": {
+          "n": 724,
+          "spearman": -0.13383526622380104,
+          "pearson": -0.18018696557691252,
+          "rmse": null,
+          "mae": null
+        },
+        "train": {
+          "n": 3367,
+          "spearman": -0.07981139154559212,
+          "pearson": -0.16468989943887338,
+          "rmse": null,
+          "mae": null
+        },
+        "val": {
+          "n": 723,
+          "spearman": -0.09650793177181051,
+          "pearson": -0.12837517983304256,
+          "rmse": null,
+          "mae": null
+        }
+      },
+      "split_pdb_id": {
+        "test": {
+          "n": 715,
+          "spearman": 0.0036527947184099374,
+          "pearson": -0.05153336951861129,
+          "rmse": null,
+          "mae": null
+        },
+        "train": {
+          "n": 3374,
+          "spearman": -0.1264515659328555,
+          "pearson": -0.1909641283209969,
+          "rmse": null,
+          "mae": null
+        },
+        "val": {
+          "n": 725,
+          "spearman": -0.014630120966963575,
+          "pearson": -0.0835664758303399,
+          "rmse": null,
+          "mae": null
+        }
+      },
+      "split_hold_out_proteins": {
+        "test": {
+          "n": 724,
+          "spearman": -0.1610028008661605,
+          "pearson": -0.14462735291203974,
+          "rmse": null,
+          "mae": null
+        },
+        "train": {
+          "n": 3371,
+          "spearman": -0.13030505531625475,
+          "pearson": -0.2110155272725927,
+          "rmse": null,
+          "mae": null
+        },
+        "val": {
+          "n": 719,
+          "spearman": 0.14926878249220032,
+          "pearson": 0.06818476206460501,
+          "rmse": null,
+          "mae": null
+        }
+      }
+    },
+    "error_analysis": {
+      "basis": "split_pdb_id == 'test'",
+      "n": 715,
+      "worst_complexes": [
+        {
+          "pdb_field": "2J0T_A_D",
+          "n": 16,
+          "mae": 3.654,
+          "ddg_std": 1.391
+        },
+        {
+          "pdb_field": "4PWX_AB_CD",
+          "n": 18,
+          "mae": 3.493,
+          "ddg_std": 0.552
+        },
+        {
+          "pdb_field": "1DVF_AB_CD",
+          "n": 33,
+          "mae": 3.398,
+          "ddg_std": 1.245
+        },
+        {
+          "pdb_field": "1FFW_A_B",
+          "n": 19,
+          "mae": 3.302,
+          "ddg_std": 0.865
+        },
+        {
+          "pdb_field": "1C1Y_A_B",
+          "n": 13,
+          "mae": 3.259,
+          "ddg_std": 0.975
+        },
+        {
+          "pdb_field": "1BJ1_HL_VW",
+          "n": 10,
+          "mae": 3.009,
+          "ddg_std": 1.727
+        },
+        {
+          "pdb_field": "2JEL_LH_P",
+          "n": 40,
+          "mae": 2.946,
+          "ddg_std": 1.139
+        },
+        {
+          "pdb_field": "3F1S_A_B",
+          "n": 10,
+          "mae": 2.737,
+          "ddg_std": 2.191
+        }
+      ],
+      "by_mutation_type": {
+        "involves_proline": {
+          "n": 18,
+          "spearman": -0.38409917354050627,
+          "pearson": -0.47528731675969893,
+          "rmse": null,
+          "mae": null
+        },
+        "involves_glycine": {
+          "n": 36,
+          "spearman": 0.4430135552784001,
+          "pearson": 0.29858299711697966,
+          "rmse": null,
+          "mae": null
+        },
+        "to_alanine": {
+          "n": 354,
+          "spearman": 0.04810637061543148,
+          "pearson": 0.03698974064953855,
+          "rmse": null,
+          "mae": null
+        },
+        "other": {
+          "n": 320,
+          "spearman": -0.08694271773797635,
+          "pearson": -0.16992267096254884,
+          "rmse": null,
+          "mae": null
+        }
+      },
+      "by_interface_location": {
+        "COR": {
+          "n": 310,
+          "spearman": -0.05230419461584567,
+          "pearson": -0.16082527081023656,
+          "rmse": null,
+          "mae": null
+        },
+        "INT": {
+          "n": 39,
+          "spearman": -0.1173489333137294,
+          "pearson": -0.21043522335477227,
+          "rmse": null,
+          "mae": null
+        },
+        "RIM": {
+          "n": 197,
+          "spearman": -0.03193600557662759,
+          "pearson": -0.025879006099013214,
+          "rmse": null,
+          "mae": null
+        },
+        "SUP": {
+          "n": 78,
+          "spearman": -0.3936109673643365,
+          "pearson": -0.3439125461943582,
+          "rmse": null,
+          "mae": null
+        },
+        "SUR": {
+          "n": 91,
+          "spearman": 0.3467647561215851,
+          "pearson": 0.41201102290855385,
+          "rmse": null,
+          "mae": null
+        }
+      },
+      "large_effect": {
+        "threshold_kcal_per_mol": 3.0,
+        "n": 59,
+        "spearman": -0.4637799763753492,
+        "pearson": -0.47711852442384534,
+        "rmse": null,
+        "mae": null
+      },
+      "antibody_antigen": {
+        "n": 230,
+        "spearman": 0.010169266155308398,
+        "pearson": 0.007292189046573673,
+        "rmse": null,
+        "mae": null
+      }
+    }
+  },
+  "linear_probe_mlp_esm2_t30_150M_UR50D_split_mutation": {
+    "name": "linear_probe_mlp_esm2_t30_150M_UR50D_split_mutation",
+    "ranking_only": false,
+    "trained_on": "split_mutation",
+    "coverage": {
+      "predicted": 4814,
+      "available": 4829,
+      "fraction": 0.9969
+    },
+    "overall": {
+      "n": 4814,
+      "spearman": 0.8501321271779844,
+      "pearson": 0.9061890079590663,
+      "rmse": 0.7269297321879618,
+      "mae": 0.450893807954469
+    },
+    "splits": {
+      "split_mutation": {
+        "test": {
+          "n": 724,
+          "spearman": 0.6028350069844711,
+          "pearson": 0.7716925059191271,
+          "rmse": 1.131243659162196,
+          "mae": 0.8237174209575551
+        },
+        "train": {
+          "n": 3367,
+          "spearman": 0.9427584983046577,
+          "pearson": 0.962103893319324,
+          "rmse": 0.4793855046542785,
+          "mae": 0.304171355324479
+        },
+        "val": {
+          "n": 723,
+          "spearman": 0.669737115994255,
+          "pearson": 0.7437056398402727,
+          "rmse": 1.0801639877393996,
+          "mae": 0.7608387625754119
+        },
+        "contaminated": false
+      },
+      "split_pdb_id": {
+        "test": {
+          "n": 715,
+          "spearman": 0.821849820758163,
+          "pearson": 0.875484790449284,
+          "rmse": 0.8282287778334632,
+          "mae": 0.47001385311984156
+        },
+        "train": {
+          "n": 3374,
+          "spearman": 0.8597131673200229,
+          "pearson": 0.9171100847953937,
+          "rmse": 0.6835797084477344,
+          "mae": 0.44031853140659927
+        },
+        "val": {
+          "n": 725,
+          "spearman": 0.8330072331337908,
+          "pearson": 0.882447663462079,
+          "rmse": 0.8109394108863633,
+          "mae": 0.4812526366155324
+        },
+        "contaminated": true
+      },
+      "split_hold_out_proteins": {
+        "test": {
+          "n": 724,
+          "spearman": 0.8399951152658053,
+          "pearson": 0.8211228485022467,
+          "rmse": 0.6949924501455589,
+          "mae": 0.4056191164889054
+        },
+        "train": {
+          "n": 3371,
+          "spearman": 0.85302858175526,
+          "pearson": 0.9164698764118139,
+          "rmse": 0.736470417969568,
+          "mae": 0.45904407078600434
+        },
+        "val": {
+          "n": 719,
+          "spearman": 0.8434063931797081,
+          "pearson": 0.8864126339435738,
+          "rmse": 0.7132289165897542,
+          "mae": 0.45827119406846367
+        },
+        "contaminated": true
+      }
+    },
+    "error_analysis": {
+      "basis": "split_mutation == 'test'",
+      "n": 724,
+      "worst_complexes": [
+        {
+          "pdb_field": "1BRS_A_D",
+          "n": 10,
+          "mae": 1.387,
+          "ddg_std": 3.109
+        },
+        {
+          "pdb_field": "3HFM_HL_Y",
+          "n": 13,
+          "mae": 1.372,
+          "ddg_std": 0.938
+        },
+        {
+          "pdb_field": "3SGB_E_I",
+          "n": 26,
+          "mae": 1.019,
+          "ddg_std": 2.529
+        },
+        {
+          "pdb_field": "1CHO_EFG_I",
+          "n": 36,
+          "mae": 0.955,
+          "ddg_std": 2.067
+        },
+        {
+          "pdb_field": "1DVF_AB_CD",
+          "n": 10,
+          "mae": 0.856,
+          "ddg_std": 1.306
+        },
+        {
+          "pdb_field": "1JTG_A_B",
+          "n": 21,
+          "mae": 0.851,
+          "ddg_std": 1.871
+        },
+        {
+          "pdb_field": "1PPF_E_I",
+          "n": 35,
+          "mae": 0.845,
+          "ddg_std": 2.118
+        },
+        {
+          "pdb_field": "1R0R_E_I",
+          "n": 28,
+          "mae": 0.82,
+          "ddg_std": 1.866
+        }
+      ],
+      "by_mutation_type": {
+        "involves_proline": {
+          "n": 34,
+          "spearman": 0.6644766997708174,
+          "pearson": 0.7820946876636704,
+          "rmse": 1.6430759732900289,
+          "mae": 1.1952032105604748
+        },
+        "involves_glycine": {
+          "n": 49,
+          "spearman": 0.6595918367346938,
+          "pearson": 0.8503585679903916,
+          "rmse": 1.2158294225662387,
+          "mae": 0.9785553394513271
+        },
+        "to_alanine": {
+          "n": 426,
+          "spearman": 0.524392198548893,
+          "pearson": 0.6961429595919362,
+          "rmse": 1.0444610279497355,
+          "mae": 0.7681686495021122
+        },
+        "other": {
+          "n": 238,
+          "spearman": 0.67890479317894,
+          "pearson": 0.8119338163302323,
+          "rmse": 1.158272480558799,
+          "mae": 0.8396995512123185
+        }
+      },
+      "by_interface_location": {
+        "COR": {
+          "n": 320,
+          "spearman": 0.7052064976805831,
+          "pearson": 0.8372525432311757,
+          "rmse": 1.1726571140394109,
+          "mae": 0.8803288397142335
+        },
+        "INT": {
+          "n": 43,
+          "spearman": 0.35734029997294275,
+          "pearson": 0.5641533733501991,
+          "rmse": 0.807885656264599,
+          "mae": 0.571748862194833
+        },
+        "RIM": {
+          "n": 169,
+          "spearman": 0.41795924456714584,
+          "pearson": 0.5611799036889414,
+          "rmse": 1.1547480569208104,
+          "mae": 0.8337081698252399
+        },
+        "SUP": {
+          "n": 106,
+          "spearman": 0.5496587809671136,
+          "pearson": 0.6137664898257602,
+          "rmse": 1.2658304386550139,
+          "mae": 0.887914141095228
+        },
+        "SUR": {
+          "n": 86,
+          "spearman": 0.08118360836785786,
+          "pearson": 0.1966466701512809,
+          "rmse": 0.8573079928972854,
+          "mae": 0.6402953876020662
+        }
+      },
+      "large_effect": {
+        "threshold_kcal_per_mol": 3.0,
+        "n": 83,
+        "spearman": 0.6772879934321662,
+        "pearson": 0.8538675838600711,
+        "rmse": 1.8338135351640135,
+        "mae": 1.3845106896752433
+      },
+      "antibody_antigen": {
+        "n": 111,
+        "spearman": 0.5637619865886623,
+        "pearson": 0.6172591670132154,
+        "rmse": 1.2188620496149174,
+        "mae": 0.839661789545465
+      }
+    }
+  },
+  "linear_probe_ridge_esm2_t30_150M_UR50D_split_mutation": {
+    "name": "linear_probe_ridge_esm2_t30_150M_UR50D_split_mutation",
+    "ranking_only": false,
+    "trained_on": "split_mutation",
+    "coverage": {
+      "predicted": 4814,
+      "available": 4829,
+      "fraction": 0.9969
+    },
+    "overall": {
+      "n": 4814,
+      "spearman": 0.5443141657779853,
+      "pearson": 0.652856091626258,
+      "rmse": 1.3112883356062022,
+      "mae": 0.9251725749048894
+    },
+    "splits": {
+      "split_mutation": {
+        "test": {
+          "n": 724,
+          "spearman": 0.48174839753744175,
+          "pearson": 0.626551262920351,
+          "rmse": 1.3746079942059402,
+          "mae": 1.0099760846967263
+        },
+        "train": {
+          "n": 3367,
+          "spearman": 0.5777165877254408,
+          "pearson": 0.6865967388267795,
+          "rmse": 1.2824845059800865,
+          "mae": 0.8952460249960936
+        },
+        "val": {
+          "n": 723,
+          "spearman": 0.448899750008823,
+          "pearson": 0.5123930719645398,
+          "rmse": 1.377351777101394,
+          "mae": 0.9796192587964875
+        },
+        "contaminated": false
+      },
+      "split_pdb_id": {
+        "test": {
+          "n": 715,
+          "spearman": 0.5158974406430195,
+          "pearson": 0.6216621782953555,
+          "rmse": 1.35395134329544,
+          "mae": 0.9334861668079276
+        },
+        "train": {
+          "n": 3374,
+          "spearman": 0.546949125385962,
+          "pearson": 0.6720996288705546,
+          "rmse": 1.2805533960008668,
+          "mae": 0.9193460922698995
+        },
+        "val": {
+          "n": 725,
+          "spearman": 0.5539501211592153,
+          "pearson": 0.5780199186424962,
+          "rmse": 1.4064351930655186,
+          "mae": 0.944088897939074
+        },
+        "contaminated": true
+      },
+      "split_hold_out_proteins": {
+        "test": {
+          "n": 724,
+          "spearman": 0.5432185387933477,
+          "pearson": 0.5270824572951599,
+          "rmse": 1.0366834990987033,
+          "mae": 0.7718320704449084
+        },
+        "train": {
+          "n": 3371,
+          "spearman": 0.5310500024721131,
+          "pearson": 0.6721107416176225,
+          "rmse": 1.3832590816877504,
+          "mae": 0.9643517632212707
+        },
+        "val": {
+          "n": 719,
+          "spearman": 0.5982298507457342,
+          "pearson": 0.6146864477575292,
+          "rmse": 1.2080975086868349,
+          "mae": 0.8958895170669274
+        },
+        "contaminated": true
+      }
+    },
+    "error_analysis": {
+      "basis": "split_mutation == 'test'",
+      "n": 724,
+      "worst_complexes": [
+        {
+          "pdb_field": "1BRS_A_D",
+          "n": 10,
+          "mae": 2.267,
+          "ddg_std": 3.109
+        },
+        {
+          "pdb_field": "1JRH_LH_I",
+          "n": 10,
+          "mae": 1.674,
+          "ddg_std": 2.033
+        },
+        {
+          "pdb_field": "1JTG_A_B",
+          "n": 21,
+          "mae": 1.561,
+          "ddg_std": 1.871
+        },
+        {
+          "pdb_field": "3SGB_E_I",
+          "n": 26,
+          "mae": 1.413,
+          "ddg_std": 2.529
+        },
+        {
+          "pdb_field": "1CHO_EFG_I",
+          "n": 36,
+          "mae": 1.294,
+          "ddg_std": 2.067
+        },
+        {
+          "pdb_field": "1PPF_E_I",
+          "n": 35,
+          "mae": 1.283,
+          "ddg_std": 2.118
+        },
+        {
+          "pdb_field": "1DVF_AB_CD",
+          "n": 10,
+          "mae": 1.246,
+          "ddg_std": 1.306
+        },
+        {
+          "pdb_field": "3HFM_HL_Y",
+          "n": 13,
+          "mae": 1.163,
+          "ddg_std": 0.938
+        }
+      ],
+      "by_mutation_type": {
+        "involves_proline": {
+          "n": 34,
+          "spearman": 0.6122230710466005,
+          "pearson": 0.7259687168481581,
+          "rmse": 1.8500985882496728,
+          "mae": 1.2916375231363586
+        },
+        "involves_glycine": {
+          "n": 49,
+          "spearman": 0.31295918367346937,
+          "pearson": 0.6461966365810097,
+          "rmse": 1.8452624419573136,
+          "mae": 1.3717461553199866
+        },
+        "to_alanine": {
+          "n": 426,
+          "spearman": 0.40877689021218977,
+          "pearson": 0.5007156036654381,
+          "rmse": 1.2350392402749497,
+          "mae": 0.9074667884243792
+        },
+        "other": {
+          "n": 238,
+          "spearman": 0.5824111288676873,
+          "pearson": 0.7162456600692719,
+          "rmse": 1.3990734984852407,
+          "mae": 1.0633975652226835
+        }
+      },
+      "by_interface_location": {
+        "COR": {
+          "n": 320,
+          "spearman": 0.5730559657165656,
+          "pearson": 0.7306758436378239,
+          "rmse": 1.5150680362248046,
+          "mae": 1.1491944468582322
+        },
+        "INT": {
+          "n": 43,
+          "spearman": 0.15379394205352634,
+          "pearson": 0.20128611637246824,
+          "rmse": 0.9220835104820261,
+          "mae": 0.7358353100813064
+        },
+        "RIM": {
+          "n": 169,
+          "spearman": 0.29074782533482857,
+          "pearson": 0.3564622469557305,
+          "rmse": 1.3041045430744527,
+          "mae": 0.9273605913343262
+        },
+        "SUP": {
+          "n": 106,
+          "spearman": 0.3836668271123204,
+          "pearson": 0.33744015392020177,
+          "rmse": 1.510623306359225,
+          "mae": 1.1249151833447666
+        },
+        "SUR": {
+          "n": 86,
+          "spearman": 0.08341247430257336,
+          "pearson": -0.021196511491672516,
+          "rmse": 0.8867720851895649,
+          "mae": 0.6497045886308481
+        }
+      },
+      "large_effect": {
+        "threshold_kcal_per_mol": 3.0,
+        "n": 83,
+        "spearman": 0.69401763239471,
+        "pearson": 0.7639800566114018,
+        "rmse": 2.7667336812643617,
+        "mae": 2.450175828613495
+      },
+      "antibody_antigen": {
+        "n": 111,
+        "spearman": 0.3454904904579201,
+        "pearson": 0.3414957378738278,
+        "rmse": 1.418201456700378,
+        "mae": 1.077310968275989
+      }
+    }
+  },
+  "linear_probe_mlp_esm2_t30_150M_UR50D_split_pdb_id": {
+    "name": "linear_probe_mlp_esm2_t30_150M_UR50D_split_pdb_id",
+    "ranking_only": false,
+    "trained_on": "split_pdb_id",
+    "coverage": {
+      "predicted": 4814,
+      "available": 4829,
+      "fraction": 0.9969
+    },
+    "overall": {
+      "n": 4814,
+      "spearman": 0.7190038726253116,
+      "pearson": 0.7756815141601254,
+      "rmse": 1.0842496728540747,
+      "mae": 0.6708607300614086
+    },
+    "splits": {
+      "split_mutation": {
+        "test": {
+          "n": 724,
+          "spearman": 0.7129568808724888,
+          "pearson": 0.807868431581002,
+          "rmse": 1.037122143921699,
+          "mae": 0.677238090790422
+        },
+        "train": {
+          "n": 3367,
+          "spearman": 0.7168686969991863,
+          "pearson": 0.7684078398718376,
+          "rmse": 1.1094717687294489,
+          "mae": 0.6747610158042651
+        },
+        "val": {
+          "n": 723,
+          "spearman": 0.7328106784505375,
+          "pearson": 0.7755768558584262,
+          "rmse": 1.0089789386275168,
+          "mae": 0.6463109772757889
+        },
+        "contaminated": true
+      },
+      "split_pdb_id": {
+        "test": {
+          "n": 715,
+          "spearman": 0.19798215922199075,
+          "pearson": 0.31039012951753736,
+          "rmse": 1.7285747170601538,
+          "mae": 1.2295298990500243
+        },
+        "train": {
+          "n": 3374,
+          "spearman": 0.868050904443772,
+          "pearson": 0.9116862767420181,
+          "rmse": 0.7080554470664265,
+          "mae": 0.4627802418535342
+        },
+        "val": {
+          "n": 725,
+          "spearman": 0.43819125042842527,
+          "pearson": 0.4292268845658595,
+          "rmse": 1.5893599073095641,
+          "mae": 1.088260883697972
+        },
+        "contaminated": false
+      },
+      "split_hold_out_proteins": {
+        "test": {
+          "n": 724,
+          "spearman": 0.6811283490596194,
+          "pearson": 0.5961488030495639,
+          "rmse": 1.037138693330159,
+          "mae": 0.6843037280292792
+        },
+        "train": {
+          "n": 3371,
+          "spearman": 0.7252624158800461,
+          "pearson": 0.800145776232973,
+          "rmse": 1.101469109607435,
+          "mae": 0.6627679488152362
+        },
+        "val": {
+          "n": 719,
+          "spearman": 0.7161708894223272,
+          "pearson": 0.7393345909732953,
+          "rmse": 1.0487012585225979,
+          "mae": 0.6952668984231735
+        },
+        "contaminated": true
+      }
+    },
+    "error_analysis": {
+      "basis": "split_pdb_id == 'test'",
+      "n": 715,
+      "worst_complexes": [
+        {
+          "pdb_field": "5M2O_A_B",
+          "n": 14,
+          "mae": 2.02,
+          "ddg_std": 0.91
+        },
+        {
+          "pdb_field": "3F1S_A_B",
+          "n": 10,
+          "mae": 1.63,
+          "ddg_std": 2.191
+        },
+        {
+          "pdb_field": "1DVF_AB_CD",
+          "n": 33,
+          "mae": 1.605,
+          "ddg_std": 1.245
+        },
+        {
+          "pdb_field": "1FFW_A_B",
+          "n": 19,
+          "mae": 1.512,
+          "ddg_std": 0.865
+        },
+        {
+          "pdb_field": "2NZ9_DC_A",
+          "n": 19,
+          "mae": 1.499,
+          "ddg_std": 1.927
+        },
+        {
+          "pdb_field": "2NYY_DC_A",
+          "n": 30,
+          "mae": 1.344,
+          "ddg_std": 1.623
+        },
+        {
+          "pdb_field": "1MLC_AB_E",
+          "n": 11,
+          "mae": 1.225,
+          "ddg_std": 0.543
+        },
+        {
+          "pdb_field": "2J0T_A_D",
+          "n": 16,
+          "mae": 1.223,
+          "ddg_std": 1.391
+        }
+      ],
+      "by_mutation_type": {
+        "involves_proline": {
+          "n": 18,
+          "spearman": 0.10428499066556755,
+          "pearson": 0.7264235988490221,
+          "rmse": 2.00264932267913,
+          "mae": 1.406843714790317
+        },
+        "involves_glycine": {
+          "n": 36,
+          "spearman": -0.1820991765010633,
+          "pearson": 0.013536567305630583,
+          "rmse": 2.136496869700917,
+          "mae": 1.6441143553014692
+        },
+        "to_alanine": {
+          "n": 354,
+          "spearman": 0.17814135813035256,
+          "pearson": 0.17729306447883228,
+          "rmse": 1.4601155326135797,
+          "mae": 1.0658876949025424
+        },
+        "other": {
+          "n": 320,
+          "spearman": 0.2733168868672691,
+          "pearson": 0.3624058042431764,
+          "rmse": 1.9117421742973604,
+          "mae": 1.348395180951115
+        }
+      },
+      "by_interface_location": {
+        "COR": {
+          "n": 310,
+          "spearman": 0.2179081730667914,
+          "pearson": 0.36222720751276255,
+          "rmse": 2.1307169526841663,
+          "mae": 1.5447926827137517
+        },
+        "INT": {
+          "n": 39,
+          "spearman": 0.050043335612958574,
+          "pearson": 0.12056817908649227,
+          "rmse": 1.1616093836276038,
+          "mae": 0.9308210585121054
+        },
+        "RIM": {
+          "n": 197,
+          "spearman": 0.10312426678253189,
+          "pearson": 0.12925371671221764,
+          "rmse": 1.3201827623007503,
+          "mae": 0.9826488628190254
+        },
+        "SUP": {
+          "n": 78,
+          "spearman": 0.5123996206543151,
+          "pearson": 0.5061066272106572,
+          "rmse": 1.4714401868530909,
+          "mae": 1.0764985587134068
+        },
+        "SUR": {
+          "n": 91,
+          "spearman": -0.22141302570167118,
+          "pearson": -0.3095441931209596,
+          "rmse": 1.343115849587906,
+          "mae": 0.9492023224454789
+        }
+      },
+      "large_effect": {
+        "threshold_kcal_per_mol": 3.0,
+        "n": 59,
+        "spearman": 0.6538461541254,
+        "pearson": 0.7062440441621277,
+        "rmse": 3.9690406955339905,
+        "mae": 3.4726354568357394
+      },
+      "antibody_antigen": {
+        "n": 230,
+        "spearman": 0.12916134418757408,
+        "pearson": 0.17751177538844395,
+        "rmse": 1.52888403288082,
+        "mae": 1.1142114096807654
+      }
+    }
+  },
+  "linear_probe_ridge_esm2_t30_150M_UR50D_split_pdb_id": {
+    "name": "linear_probe_ridge_esm2_t30_150M_UR50D_split_pdb_id",
+    "ranking_only": false,
+    "trained_on": "split_pdb_id",
+    "coverage": {
+      "predicted": 4814,
+      "available": 4829,
+      "fraction": 0.9969
+    },
+    "overall": {
+      "n": 4814,
+      "spearman": 0.4043753641143938,
+      "pearson": 0.32985331209433133,
+      "rmse": 2.040884798271296,
+      "mae": 1.3406560858876637
+    },
+    "splits": {
+      "split_mutation": {
+        "test": {
+          "n": 724,
+          "spearman": 0.38514239783212545,
+          "pearson": 0.3651615474013304,
+          "rmse": 2.066120955210129,
+          "mae": 1.4093427544533843
+        },
+        "train": {
+          "n": 3367,
+          "spearman": 0.41037148208981705,
+          "pearson": 0.3297900857479851,
+          "rmse": 2.05622796232182,
+          "mae": 1.3362912686193358
+        },
+        "val": {
+          "n": 723,
+          "spearman": 0.39773230348146504,
+          "pearson": 0.28680657531614795,
+          "rmse": 1.9413067380422093,
+          "mae": 1.2922013026247021
+        },
+        "contaminated": true
+      },
+      "split_pdb_id": {
+        "test": {
+          "n": 715,
+          "spearman": 0.09167788113313646,
+          "pearson": 0.10022370310655403,
+          "rmse": 3.5725967580405205,
+          "mae": 2.7278352859726165
+        },
+        "train": {
+          "n": 3374,
+          "spearman": 0.5856583645880176,
+          "pearson": 0.7034273510852419,
+          "rmse": 1.2251672491805843,
+          "mae": 0.8792940663211294
+        },
+        "val": {
+          "n": 725,
+          "spearman": 0.1757066434178811,
+          "pearson": 0.10055457583247257,
+          "rmse": 2.843254131458929,
+          "mae": 2.119693776862486
+        },
+        "contaminated": false
+      },
+      "split_hold_out_proteins": {
+        "test": {
+          "n": 724,
+          "spearman": 0.34108698023091405,
+          "pearson": 0.16960201148609017,
+          "rmse": 2.2408224715685954,
+          "mae": 1.4761274250465826
+        },
+        "train": {
+          "n": 3371,
+          "spearman": 0.41353520775989905,
+          "pearson": 0.4129616281748815,
+          "rmse": 1.8482231682323136,
+          "mae": 1.2540210436583807
+        },
+        "val": {
+          "n": 719,
+          "spearman": 0.4326454659908286,
+          "pearson": 0.2356650142650152,
+          "rmse": 2.6107773188262398,
+          "mae": 1.6104272650307185
+        },
+        "contaminated": true
+      }
+    },
+    "error_analysis": {
+      "basis": "split_pdb_id == 'test'",
+      "n": 715,
+      "worst_complexes": [
+        {
+          "pdb_field": "1KNE_A_P",
+          "n": 13,
+          "mae": 9.791,
+          "ddg_std": 0.557
+        },
+        {
+          "pdb_field": "1DVF_AB_CD",
+          "n": 33,
+          "mae": 5.576,
+          "ddg_std": 1.245
+        },
+        {
+          "pdb_field": "1FFW_A_B",
+          "n": 19,
+          "mae": 4.376,
+          "ddg_std": 0.865
+        },
+        {
+          "pdb_field": "4PWX_AB_CD",
+          "n": 18,
+          "mae": 4.278,
+          "ddg_std": 0.552
+        },
+        {
+          "pdb_field": "1F47_A_B",
+          "n": 12,
+          "mae": 4.025,
+          "ddg_std": 0.983
+        },
+        {
+          "pdb_field": "1BJ1_HL_VW",
+          "n": 10,
+          "mae": 3.248,
+          "ddg_std": 1.727
+        },
+        {
+          "pdb_field": "4RS1_A_B",
+          "n": 38,
+          "mae": 3.193,
+          "ddg_std": 1.227
+        },
+        {
+          "pdb_field": "1FC2_C_D",
+          "n": 23,
+          "mae": 3.153,
+          "ddg_std": 1.232
+        }
+      ],
+      "by_mutation_type": {
+        "involves_proline": {
+          "n": 18,
+          "spearman": -0.11977286056639443,
+          "pearson": 0.1409262215409274,
+          "rmse": 3.6178633770884256,
+          "mae": 2.6801315536633203
+        },
+        "involves_glycine": {
+          "n": 36,
+          "spearman": -0.02163554572289861,
+          "pearson": -0.13399760967587976,
+          "rmse": 3.7233832412745453,
+          "mae": 2.6417238713829474
+        },
+        "to_alanine": {
+          "n": 354,
+          "spearman": -0.034192088914790156,
+          "pearson": -0.0028968270354463757,
+          "rmse": 3.2712577842059574,
+          "mae": 2.560120716165673
+        },
+        "other": {
+          "n": 320,
+          "spearman": 0.22308350285353706,
+          "pearson": 0.15657171635175676,
+          "rmse": 3.8668526260019647,
+          "mae": 2.9268565218979363
+        }
+      },
+      "by_interface_location": {
+        "COR": {
+          "n": 310,
+          "spearman": 0.12739460997624744,
+          "pearson": 0.12274222421113959,
+          "rmse": 3.634491660176265,
+          "mae": 2.7661234287784895
+        },
+        "INT": {
+          "n": 39,
+          "spearman": -0.05329158457769422,
+          "pearson": -0.01291291142342386,
+          "rmse": 3.418184659092929,
+          "mae": 2.904148590889945
+        },
+        "RIM": {
+          "n": 197,
+          "spearman": -0.02240286066259687,
+          "pearson": 0.07148149542316229,
+          "rmse": 3.87362208070799,
+          "mae": 2.960943094658803
+        },
+        "SUP": {
+          "n": 78,
+          "spearman": 0.013493518812334127,
+          "pearson": -0.043662248858509556,
+          "rmse": 3.6197501999223753,
+          "mae": 2.730168216373945
+        },
+        "SUR": {
+          "n": 91,
+          "spearman": 0.19465297553953237,
+          "pearson": 0.30409671259157717,
+          "rmse": 2.5618899262478285,
+          "mae": 2.0152006701036167
+        }
+      },
+      "large_effect": {
+        "threshold_kcal_per_mol": 3.0,
+        "n": 59,
+        "spearman": 0.1357552023025426,
+        "pearson": 0.1650995340253515,
+        "rmse": 5.362059003862739,
+        "mae": 4.2402653290162435
+      },
+      "antibody_antigen": {
+        "n": 230,
+        "spearman": -0.15361628613925377,
+        "pearson": -0.13691058380769727,
+        "rmse": 2.8772085138875525,
+        "mae": 2.2666185272813846
+      }
+    }
+  },
+  "linear_probe_mlp_esm2_t30_150M_UR50D_split_hold_out_proteins": {
+    "name": "linear_probe_mlp_esm2_t30_150M_UR50D_split_hold_out_proteins",
+    "ranking_only": false,
+    "trained_on": "split_hold_out_proteins",
+    "coverage": {
+      "predicted": 4814,
+      "available": 4829,
+      "fraction": 0.9969
+    },
+    "overall": {
+      "n": 4814,
+      "spearman": 0.6033969759161719,
+      "pearson": 0.7151245742520539,
+      "rmse": 1.205788967111789,
+      "mae": 0.8195998356257231
+    },
+    "splits": {
+      "split_mutation": {
+        "test": {
+          "n": 724,
+          "spearman": 0.6029792929267844,
+          "pearson": 0.7551437727487328,
+          "rmse": 1.1586645738240062,
+          "mae": 0.8202635217288536
+        },
+        "train": {
+          "n": 3367,
+          "spearman": 0.6004199624306885,
+          "pearson": 0.7114743896643042,
+          "rmse": 1.221776589103867,
+          "mae": 0.8236813041290403
+        },
+        "val": {
+          "n": 723,
+          "spearman": 0.6164370085251136,
+          "pearson": 0.6839565076327506,
+          "rmse": 1.1767592556259006,
+          "mae": 0.7999278948382603
+        },
+        "contaminated": true
+      },
+      "split_pdb_id": {
+        "test": {
+          "n": 715,
+          "spearman": 0.532758480748929,
+          "pearson": 0.6321914778086914,
+          "rmse": 1.3337246896104222,
+          "mae": 0.8755706541876255
+        },
+        "train": {
+          "n": 3374,
+          "spearman": 0.626219487116286,
+          "pearson": 0.7498326239978893,
+          "rmse": 1.1372544574698944,
+          "mae": 0.7854903051964585
+        },
+        "val": {
+          "n": 725,
+          "spearman": 0.556040942633187,
+          "pearson": 0.6092591484007532,
+          "rmse": 1.37142874806284,
+          "mae": 0.9231397258278995
+        },
+        "contaminated": true
+      },
+      "split_hold_out_proteins": {
+        "test": {
+          "n": 724,
+          "spearman": 0.26219611061331555,
+          "pearson": 0.2594867438467177,
+          "rmse": 1.3106658718191695,
+          "mae": 0.9707125633991656
+        },
+        "train": {
+          "n": 3371,
+          "spearman": 0.7491598807385921,
+          "pearson": 0.8345955581475677,
+          "rmse": 1.026128731316542,
+          "mae": 0.6781767045850927
+        },
+        "val": {
+          "n": 719,
+          "spearman": 0.2542489202466688,
+          "pearson": 0.25696249654648445,
+          "rmse": 1.7516229763820503,
+          "mae": 1.3304924084073535
+        },
+        "contaminated": false
+      }
+    },
+    "error_analysis": {
+      "basis": "split_hold_out_proteins == 'test'",
+      "n": 724,
+      "worst_complexes": [
+        {
+          "pdb_field": "4BFI_A_B",
+          "n": 11,
+          "mae": 1.783,
+          "ddg_std": 1.172
+        },
+        {
+          "pdb_field": "3F1S_A_B",
+          "n": 10,
+          "mae": 1.638,
+          "ddg_std": 2.191
+        },
+        {
+          "pdb_field": "1LFD_A_B",
+          "n": 78,
+          "mae": 1.613,
+          "ddg_std": 1.205
+        },
+        {
+          "pdb_field": "1JCK_A_B",
+          "n": 14,
+          "mae": 1.324,
+          "ddg_std": 0.765
+        },
+        {
+          "pdb_field": "1AK4_A_D",
+          "n": 15,
+          "mae": 1.256,
+          "ddg_std": 0.903
+        },
+        {
+          "pdb_field": "1KTZ_A_B",
+          "n": 27,
+          "mae": 1.165,
+          "ddg_std": 0.934
+        },
+        {
+          "pdb_field": "3SZK_AB_C",
+          "n": 21,
+          "mae": 1.085,
+          "ddg_std": 0.936
+        },
+        {
+          "pdb_field": "3NCB_A_B",
+          "n": 19,
+          "mae": 1.002,
+          "ddg_std": 0.778
+        }
+      ],
+      "by_mutation_type": {
+        "involves_proline": {
+          "n": 9,
+          "spearman": NaN,
+          "pearson": NaN,
+          "rmse": 1.484596998337517,
+          "mae": 1.2071221903028948
+        },
+        "involves_glycine": {
+          "n": 26,
+          "spearman": 0.08444444444444445,
+          "pearson": 0.018161303486343233,
+          "rmse": 1.1382847757369337,
+          "mae": 0.9029276142749494
+        },
+        "to_alanine": {
+          "n": 474,
+          "spearman": 0.1953472648164801,
+          "pearson": 0.19955658066853454,
+          "rmse": 1.1669003596825391,
+          "mae": 0.8799832510322482
+        },
+        "other": {
+          "n": 228,
+          "spearman": 0.33669346271612166,
+          "pearson": 0.2868252912660789,
+          "rmse": 1.5797927465358765,
+          "mae": 1.1653201042167605
+        }
+      },
+      "by_interface_location": {
+        "COR": {
+          "n": 281,
+          "spearman": 0.36974602394707523,
+          "pearson": 0.4404433394695916,
+          "rmse": 1.442194782937583,
+          "mae": 1.089852749127025
+        },
+        "INT": {
+          "n": 82,
+          "spearman": 0.07555101650580275,
+          "pearson": -0.04686780585249944,
+          "rmse": 1.1274452276819606,
+          "mae": 0.7429930991621745
+        },
+        "RIM": {
+          "n": 163,
+          "spearman": 0.19765215243140166,
+          "pearson": 0.2456430028127785,
+          "rmse": 1.187481829808094,
+          "mae": 0.8961290339546961
+        },
+        "SUP": {
+          "n": 102,
+          "spearman": 0.4097306454686141,
+          "pearson": 0.3084853870526319,
+          "rmse": 1.2041937408449803,
+          "mae": 0.882384833962815
+        },
+        "SUR": {
+          "n": 96,
+          "spearman": 0.053644903033655406,
+          "pearson": -0.014490676529163006,
+          "rmse": 1.3588863059097185,
+          "mae": 1.0369745173560523
+        }
+      },
+      "large_effect": {
+        "threshold_kcal_per_mol": 3.0,
+        "n": 25,
+        "spearman": -0.05193306501144922,
+        "pearson": -0.01917012607415182,
+        "rmse": 3.314882780092037,
+        "mae": 2.86647734355035
+      }
+    }
+  },
+  "linear_probe_ridge_esm2_t30_150M_UR50D_split_hold_out_proteins": {
+    "name": "linear_probe_ridge_esm2_t30_150M_UR50D_split_hold_out_proteins",
+    "ranking_only": false,
+    "trained_on": "split_hold_out_proteins",
+    "coverage": {
+      "predicted": 4814,
+      "available": 4829,
+      "fraction": 0.9969
+    },
+    "overall": {
+      "n": 4814,
+      "spearman": 0.3778357970278581,
+      "pearson": 0.25548026226071463,
+      "rmse": 2.5900701593846245,
+      "mae": 1.5680113453737399
+    },
+    "splits": {
+      "split_mutation": {
+        "test": {
+          "n": 724,
+          "spearman": 0.35214496488757324,
+          "pearson": 0.27411071527346054,
+          "rmse": 2.5481795609784106,
+          "mae": 1.5651150891731578
+        },
+        "train": {
+          "n": 3367,
+          "spearman": 0.3817431309139367,
+          "pearson": 0.25107584133056843,
+          "rmse": 2.627145479281216,
+          "mae": 1.583027302190871
+        },
+        "val": {
+          "n": 723,
+          "spearman": 0.38150190115815896,
+          "pearson": 0.2567482137164853,
+          "rmse": 2.4542219162431174,
+          "mae": 1.5009825250223439
+        },
+        "contaminated": true
+      },
+      "split_pdb_id": {
+        "test": {
+          "n": 715,
+          "spearman": 0.2500581610447293,
+          "pearson": 0.13858566093137498,
+          "rmse": 3.0387690761162487,
+          "mae": 1.8366520916902889
+        },
+        "train": {
+          "n": 3374,
+          "spearman": 0.4085334221423399,
+          "pearson": 0.2975683355295647,
+          "rmse": 2.3585008560719634,
+          "mae": 1.439343058887232
+        },
+        "val": {
+          "n": 725,
+          "spearman": 0.3513667912463575,
+          "pearson": 0.19639633605479528,
+          "rmse": 3.090404559506689,
+          "mae": 1.9018715729449744
+        },
+        "contaminated": true
+      },
+      "split_hold_out_proteins": {
+        "test": {
+          "n": 724,
+          "spearman": 0.19275030536182644,
+          "pearson": 0.10960454014399705,
+          "rmse": 3.4280237285815014,
+          "mae": 2.2544346129823776
+        },
+        "train": {
+          "n": 3371,
+          "spearman": 0.5630218212023014,
+          "pearson": 0.713046447127773,
+          "rmse": 1.3140924769878803,
+          "mae": 0.9264140007048126
+        },
+        "val": {
+          "n": 719,
+          "spearman": 0.026040902508581428,
+          "pearson": 0.010270962656087294,
+          "rmse": 4.99866373774458,
+          "mae": 3.884915661271236
+        },
+        "contaminated": false
+      }
+    },
+    "error_analysis": {
+      "basis": "split_hold_out_proteins == 'test'",
+      "n": 724,
+      "worst_complexes": [
+        {
+          "pdb_field": "1XD3_A_B",
+          "n": 18,
+          "mae": 10.647,
+          "ddg_std": 1.018
+        },
+        {
+          "pdb_field": "3SZK_AB_C",
+          "n": 21,
+          "mae": 7.625,
+          "ddg_std": 0.936
+        },
+        {
+          "pdb_field": "1AK4_A_D",
+          "n": 15,
+          "mae": 6.908,
+          "ddg_std": 0.903
+        },
+        {
+          "pdb_field": "3F1S_A_B",
+          "n": 10,
+          "mae": 6.573,
+          "ddg_std": 2.191
+        },
+        {
+          "pdb_field": "1FFW_A_B",
+          "n": 19,
+          "mae": 6.028,
+          "ddg_std": 0.865
+        },
+        {
+          "pdb_field": "3SE3_B_A",
+          "n": 17,
+          "mae": 4.928,
+          "ddg_std": 0.582
+        },
+        {
+          "pdb_field": "4BFI_A_B",
+          "n": 11,
+          "mae": 2.065,
+          "ddg_std": 1.172
+        },
+        {
+          "pdb_field": "1JCK_A_B",
+          "n": 14,
+          "mae": 1.798,
+          "ddg_std": 0.765
+        }
+      ],
+      "by_mutation_type": {
+        "involves_proline": {
+          "n": 9,
+          "spearman": NaN,
+          "pearson": NaN,
+          "rmse": 4.935189482046258,
+          "mae": 4.246810988300224
+        },
+        "involves_glycine": {
+          "n": 26,
+          "spearman": -0.16786324786324786,
+          "pearson": -0.3199259646853424,
+          "rmse": 3.970029449721069,
+          "mae": 2.687255497565466
+        },
+        "to_alanine": {
+          "n": 474,
+          "spearman": 0.15122982653809952,
+          "pearson": 0.09594777694481832,
+          "rmse": 3.4061585443225706,
+          "mae": 2.207818444853098
+        },
+        "other": {
+          "n": 228,
+          "spearman": 0.16031361773005529,
+          "pearson": 0.13111225785133582,
+          "rmse": 3.4370157188038157,
+          "mae": 2.315538686329712
+        }
+      },
+      "by_interface_location": {
+        "COR": {
+          "n": 281,
+          "spearman": 0.2529991541358017,
+          "pearson": 0.16005925173747249,
+          "rmse": 3.468025409346765,
+          "mae": 2.526616611285703
+        },
+        "INT": {
+          "n": 82,
+          "spearman": 0.09163473679681898,
+          "pearson": 0.03589524515565656,
+          "rmse": 2.664740127011284,
+          "mae": 1.6261576878825184
+        },
+        "RIM": {
+          "n": 163,
+          "spearman": 0.23048794452746682,
+          "pearson": 0.10685493556899262,
+          "rmse": 3.345280334295641,
+          "mae": 2.1147464232537616
+        },
+        "SUP": {
+          "n": 102,
+          "spearman": 0.31425216964761626,
+          "pearson": 0.20407059947772807,
+          "rmse": 3.166131492208201,
+          "mae": 1.903077230383961
+        },
+        "SUR": {
+          "n": 96,
+          "spearman": 0.27319722638214605,
+          "pearson": 0.16070042071103213,
+          "rmse": 4.207456714425404,
+          "mae": 2.6048845534590144
+        }
+      },
+      "large_effect": {
+        "threshold_kcal_per_mol": 3.0,
+        "n": 25,
+        "spearman": 0.019619157893214147,
+        "pearson": 0.06054410967322093,
+        "rmse": 4.76087198356469,
+        "mae": 4.043704348785072
+      }
+    }
+  }
+}

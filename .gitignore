@@ -30,6 +30,13 @@ checkpoints/
 wandb/
 .wandb/
 
+# --- Results ----------------------------------------------------------------
+# results/metrics.json IS committed — it is the numbers the README quotes.
+# The per-run prediction CSVs are regenerable from the baselines and would
+# otherwise churn ~2MB per experiment, so they are not.
+results/preds_*.csv
+results/figures/*.png
+
 # --- Caches -----------------------------------------------------------------
 # Hugging Face model cache, if HF_HOME is ever pointed inside the repo.
 .cache/

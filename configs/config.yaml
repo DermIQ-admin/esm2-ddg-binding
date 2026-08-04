@@ -12,7 +12,12 @@ data:
   # Section 6.4 filtering rules for v1
   single_point_only: true                   # section 3 — multi-point is out of scope
   drop_abolished_binding: true              # section 6.3 — inequalities, not clean Kd
-  max_sequence_length: null                 # section 6.4 — decide empirically from EDA
+  # Section 6.4 said "decide empirically from EDA". Decided in session 3 against
+  # the real tokenizer. TOKENS, not residues (ESM-2 adds <cls> and <eos>, so
+  # tokens = residues + 2). ESM-2 is rotary, so there is no hard 1024 wall; this
+  # is a compute budget. 2048 excludes 2 complexes / 15 rows (0.3%) and caps
+  # worst-case attention. See the src/data/dataset.py docstring for the table.
+  max_tokens: 2048
 
 thermodynamics:
   gas_constant: 1.987e-3                    # kcal/(mol*K), section 6.3
