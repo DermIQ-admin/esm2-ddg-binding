@@ -86,7 +86,8 @@ TOKENIZER_OVERHEAD = 2  # <cls> ... <eos>, verified constant across all 316 comp
 SPLIT_COLUMNS = ["split_mutation", "split_pdb_id", "split_hold_out_proteins"]
 
 
-def load_frames(processed_dir: Path = PROCESSED_DIR) -> pd.DataFrame:
+def load_frames(processed_dir: Path = PROCESSED_DIR,
+                splits_file: str = "splits.csv") -> pd.DataFrame:
     """Join the three processed tables into one row-per-mutation frame.
 
     `complexes.csv` is keyed by `pdb_field` and holds the sequence; `splits.csv`
@@ -96,7 +97,7 @@ def load_frames(processed_dir: Path = PROCESSED_DIR) -> pd.DataFrame:
     """
     mutations = pd.read_csv(processed_dir / "mutations.csv")
     complexes = pd.read_csv(processed_dir / "complexes.csv")
-    splits = pd.read_csv(processed_dir / "splits.csv")
+    splits = pd.read_csv(processed_dir / splits_file)
 
     df = mutations.merge(
         # `chain_offsets` is unused by the Dataset itself but lets the zero-shot
@@ -357,6 +358,7 @@ def build_dataloaders(
     max_tokens_per_batch: int | None = 8192,
     processed_dir: Path = PROCESSED_DIR,
     num_workers: int = 0,
+    splits_file: str = "splits.csv",
 ) -> dict[str, DataLoader]:
     """train/val/test DataLoaders for one split definition.
 
@@ -367,7 +369,7 @@ def build_dataloaders(
     Only the training loader shuffles. Shuffling val/test would change nothing
     about the metrics but would make per-batch debugging output non-reproducible.
     """
-    frame = load_frames(processed_dir)
+    frame = load_frames(processed_dir, splits_file)
     collate = make_collate_fn(tokenizer)
 
     loaders = {}

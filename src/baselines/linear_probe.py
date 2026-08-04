@@ -295,14 +295,17 @@ def main() -> None:
     parser.add_argument("--max-tokens", type=int, default=MAX_TOKENS)
     parser.add_argument("--results-dir", type=Path, default=RESULTS_DIR)
     parser.add_argument("--cache-dir", type=Path, default=CACHE_DIR)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--splits-file", default="splits.csv")
     args = parser.parse_args()
 
-    set_seed(42)
+    set_seed(args.seed)
     device_info = describe_device()
     device = torch.device("cuda" if device_info["cuda_available"] else "cpu")
     print(f"Device: {device}  ({device_info.get('device_name', 'cpu')})\n")
 
-    df = apply_length_policy(load_frames(), max_tokens=args.max_tokens)
+    df = apply_length_policy(load_frames(splits_file=args.splits_file),
+                             max_tokens=args.max_tokens)
 
     print("\nEmbeddings (frozen backbone — computed once, reused by all three heads):")
     wt, mut = build_or_load_cache(df, args.backbone, device, args.cache_dir)
@@ -315,6 +318,8 @@ def main() -> None:
     from src.evaluate import evaluate_predictions, format_report, save_report
 
     tag = args.backbone.split("/")[-1]
+    split_seed = (args.splits_file.replace("splits_seed", "").replace(".csv", "")
+                  if args.splits_file != "splits.csv" else "42")
 
     for split_column in SPLIT_COLUMNS:
         print(f"\n{'=' * 72}\n  training on {split_column}\n{'=' * 72}")
@@ -340,13 +345,16 @@ def main() -> None:
         for label, values in (("mlp", mlp_predictions), ("ridge", ridge_predictions)):
             predictions = pd.DataFrame({"uid": df["uid"], "y_pred": values})
             predictions.to_csv(
-                args.results_dir / f"preds_linear_probe_{label}_{tag}_{split_column}.csv",
+                args.results_dir / f"preds_linear_probe_{label}_{tag}_{split_column}"
+                f"_split{split_seed}_seed{args.seed}.csv",
                 index=False,
             )
             report = evaluate_predictions(
                 predictions,
-                name=f"linear_probe_{label}_{tag}_{split_column}",
+                name=f"linear_probe_{label}_{tag}_{split_column}"
+                     f"_split{split_seed}_seed{args.seed}",
                 trained_on=split_column,
+                splits_file=args.splits_file,
             )
             print(format_report(report))
             save_report(report, args.results_dir)

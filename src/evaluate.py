@@ -110,10 +110,11 @@ def regression_metrics(
     return out
 
 
-def load_truth(processed_dir: Path = PROCESSED_DIR) -> pd.DataFrame:
+def load_truth(processed_dir: Path = PROCESSED_DIR,
+               splits_file: str = "splits.csv") -> pd.DataFrame:
     """uid -> ddg plus the metadata the error analysis needs."""
     mutations = pd.read_csv(processed_dir / "mutations.csv")
-    splits = pd.read_csv(processed_dir / "splits.csv")
+    splits = pd.read_csv(processed_dir / splits_file)
     columns = [
         "uid", "pdb_field", "pdb_id", "hold_out_type", "mutation",
         "wt_aa", "mut_aa", "interface_location", "ddg",
@@ -131,6 +132,7 @@ def evaluate_predictions(
     ranking_only: bool = False,
     trained_on: str | None = None,
     processed_dir: Path = PROCESSED_DIR,
+    splits_file: str = "splits.csv",
 ) -> dict:
     """Score one run against every split definition.
 
@@ -165,7 +167,9 @@ def evaluate_predictions(
     if predictions["uid"].duplicated().any():
         raise ValueError("predictions contain duplicate uids")
 
-    truth = load_truth(processed_dir)
+    # MUST match the partition the model trained against, or every
+    # split label in the report is wrong.
+    truth = load_truth(processed_dir, splits_file)
     merged = truth.merge(predictions[["uid", "y_pred"]], on="uid", how="inner",
                          validate="one_to_one")
 

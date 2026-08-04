@@ -139,12 +139,20 @@ def split_by_row(
     return assignment
 
 
-def make_splits(mutations: pd.DataFrame) -> pd.DataFrame:
-    """Build every split and return a uid-keyed table of assignments."""
+def make_splits(mutations: pd.DataFrame,
+                random_state: int = RANDOM_STATE) -> pd.DataFrame:
+    """Build every split and return a uid-keyed table of assignments.
+
+    `random_state` re-partitions the complexes. Varying it is how we measure the
+    variance that training seeds cannot reach: val and test hold DIFFERENT
+    COMPLEXES, not different samples of the same ones, so "which complexes
+    landed where" is a distinct and probably larger source of variance than
+    training stochasticity. See src/replicates.py.
+    """
     out = pd.DataFrame({"uid": mutations["uid"]})
-    out["split_mutation"] = split_by_row(mutations.index).values
+    out["split_mutation"] = split_by_row(mutations.index, random_state=random_state).values
     for key in GROUP_KEYS:
-        out[f"split_{key}"] = split_by_group(mutations[key]).values
+        out[f"split_{key}"] = split_by_group(mutations[key], random_state=random_state).values
     return out
 
 
@@ -176,15 +184,22 @@ def summarize(mutations: pd.DataFrame, splits: pd.DataFrame) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--processed-dir", type=Path, default=PROCESSED_DIR)
+    parser.add_argument("--random-state", type=int, default=RANDOM_STATE,
+                        help="re-partition the complexes; writes splits_seed{N}.csv "
+                             "for anything other than the default")
     args = parser.parse_args()
 
     mutations = pd.read_csv(args.processed_dir / "mutations.csv")
-    splits = make_splits(mutations)
+    splits = make_splits(mutations, random_state=args.random_state)
 
     check_no_leakage(mutations, splits)
     print("Leakage check passed: no group appears in two splits.")
 
-    out_path = args.processed_dir / "splits.csv"
+    # The default keeps the committed filename; alternates are suffixed so the
+    # canonical splits.csv is never silently overwritten by a replicate run.
+    out_path = args.processed_dir / (
+        "splits.csv" if args.random_state == RANDOM_STATE
+        else f"splits_seed{args.random_state}.csv")
     splits.to_csv(out_path, index=False)
     print(f"Wrote {len(splits)} assignments -> {out_path}")
 

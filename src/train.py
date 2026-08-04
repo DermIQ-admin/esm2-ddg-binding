@@ -221,7 +221,11 @@ def main() -> None:
                         help="needed for 650M; roughly free on 150M")
     parser.add_argument("--limit-batches", type=int, default=None,
                         help="section 8 step 1: a tiny mechanical-correctness run")
-    parser.add_argument("--seed", type=int, default=config["seed"])
+    parser.add_argument("--seed", type=int, default=config["seed"],
+                        help="training stochasticity: head init, dropout, batch order")
+    parser.add_argument("--splits-file", default="splits.csv",
+                        help="alternate partition from splits.py --random-state; "
+                             "varies WHICH COMPLEXES are held out, which --seed cannot")
     parser.add_argument("--results-dir", type=Path, default=RESULTS_DIR)
     args = parser.parse_args()
 
@@ -241,6 +245,7 @@ def main() -> None:
         batch_size=args.batch_size,
         max_tokens=MAX_TOKENS,
         max_tokens_per_batch=args.max_tokens_per_batch,
+        splits_file=args.splits_file,
     )
     for name, loader in loaders.items():
         print(f"    {name:<6} {len(loader.dataset):>5} rows, {len(loader):>4} batches")
@@ -290,7 +295,11 @@ def main() -> None:
     ).drop_duplicates("uid")
 
     tag = args.backbone.split("/")[-1]
-    name = f"finetune_{tag}_{args.split_column}"
+    # Both seeds go in the name: a replicate is only interpretable if you can
+    # tell which partition and which training run produced it.
+    split_seed = (args.splits_file.replace("splits_seed", "").replace(".csv", "")
+                  if args.splits_file != "splits.csv" else "42")
+    name = f"finetune_{tag}_{args.split_column}_split{split_seed}_seed{args.seed}"
     args.results_dir.mkdir(parents=True, exist_ok=True)
     predictions.to_csv(args.results_dir / f"preds_{name}.csv", index=False)
 
@@ -299,7 +308,8 @@ def main() -> None:
                 "summary": summary}, CHECKPOINT_DIR / f"{name}.pt")
 
     from src.evaluate import evaluate_predictions, format_report, save_report
-    report = evaluate_predictions(predictions, name=name, trained_on=args.split_column)
+    report = evaluate_predictions(predictions, name=name, trained_on=args.split_column,
+                                  splits_file=args.splits_file)
     report["training"] = summary
     print(format_report(report))
     print(f"\n  metrics    -> {save_report(report, args.results_dir)}")
