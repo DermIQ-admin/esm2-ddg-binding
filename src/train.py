@@ -204,7 +204,15 @@ def main() -> None:
     parser.add_argument("--epochs", type=int, default=config["training"]["epochs"])
     parser.add_argument("--batch-size", type=int, default=config["training"]["batch_size"])
     parser.add_argument("--lr", type=float, default=config["training"]["learning_rate"])
-    parser.add_argument("--max-tokens-per-batch", type=int, default=8192,
+    # 4096, matching the config that was actually benchmarked (8 x 512 -> 10.9 GB
+    # peak on the 150M). An earlier default of 8192 was set by eye rather than
+    # from that measurement: it roughly doubles activation memory, and combined
+    # with allocator fragmentation across variable batch shapes it drove the
+    # reserved pool to 24.0 of the card's 24.0 GB and spilled into host memory —
+    # 26.8 GB working set, 99% GPU utilisation, and no forward progress worth
+    # the wall time. The median complex is 394 tokens, so at 4096 most batches
+    # still reach the full batch_size of 8 and little throughput is lost.
+    parser.add_argument("--max-tokens-per-batch", type=int, default=4096,
                         help="memory ceiling per step; see TokenBudgetBatchSampler")
     parser.add_argument("--accumulation-steps", type=int,
                         default=config["training"]["gradient_accumulation_steps"])

@@ -35,7 +35,9 @@ wandb/
 # The per-run prediction CSVs are regenerable from the baselines and would
 # otherwise churn ~2MB per experiment, so they are not.
 results/preds_*.csv
-results/figures/*.png
+# Training logs are transient; the curves that matter live in metrics.json
+# under each run's "training" key, and in CLAUDE.md.
+train_*.log
 
 # --- Caches -----------------------------------------------------------------
 # Hugging Face model cache, if HF_HOME is ever pointed inside the repo.
