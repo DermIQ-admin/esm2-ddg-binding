@@ -1,4 +1,11 @@
-"""Aggregate replicate runs into mean +/- std. PLAN.md section 9 (error bars).
+"""Aggregate replicate runs. PLAN.md section 9 (error bars), section 13.1 (antibodies).
+
+Prints four things:
+
+  summarize()           mean +/- std per method, split by variance source
+  paired_comparison()   finetune - probe on ALL test rows, paired, with CI and p
+  summarize_antibody()  the AB/AG subset (section 13.1), pooled over replicates
+  paired_comparison()   the same paired test restricted to AB/AG rows
 
 TWO SOURCES OF VARIANCE, REPORTED SEPARATELY
 --------------------------------------------
@@ -70,6 +77,20 @@ def load_runs() -> list[dict]:
             "antibody_n": antibody.get("n"),
         })
     return runs
+
+
+def method_family(method: str) -> tuple[str, str]:
+    """('finetune', 'pdb_id') from 'finetune_esm2_t30_150M_UR50D_split_pdb_id'.
+
+    Splits on the backbone tag so the family can be compared EXACTLY. An earlier
+    version matched with startswith(), which silently made 'finetune_lora' a
+    'finetune' -- last write winning by dict order. On a mocked-up LoRA run that
+    turned a true -0.02 difference into a reported +0.680 at p=0.000 with a
+    zero-width CI: maximally confident and completely wrong. PLAN.md 7.4 puts a
+    LoRA run on the roadmap, so that collision was scheduled, not theoretical.
+    """
+    head, _, column = method.partition("_split_")
+    return head.partition("_esm2_")[0], column
 
 
 def short(name: str) -> str:
@@ -172,19 +193,15 @@ def paired_comparison(
     Five pairs is a small n and the t-interval is correspondingly wide. Read a
     significant result here as "worth reporting", not "settled".
     """
-    def family(method: str) -> tuple[str, str]:
-        head, _, column = method.partition("_split_")
-        return head, column
-
     indexed: dict[tuple, dict[str, float]] = defaultdict(dict)
     for r in runs:
         if r[metric] is None:
             continue
-        head, column = family(r["method"])
+        family, column = method_family(r["method"])
         key = (column, r["split_seed"], r["train_seed"])
-        for name in (challenger, baseline):
-            if head.startswith(name):
-                indexed[key][name] = r[metric]
+        # Exact match, NOT startswith -- see method_family's docstring.
+        if family in (challenger, baseline):
+            indexed[key][family] = r[metric]
 
     by_column: dict[str, list[float]] = defaultdict(list)
     for (column, _, _), pair in indexed.items():
@@ -198,8 +215,11 @@ def paired_comparison(
     for column in sorted(by_column):
         d = np.array(by_column[column])
         if len(d) < 2:
+            # Say so rather than dropping the row -- a split that quietly
+            # vanishes from a results table reads as "not different".
+            print(f"  {column:<24}{len(d):>3}   too few pairs to test")
             continue
-        t_stat, p = stats.ttest_1samp(d, 0.0)
+        _, p = stats.ttest_1samp(d, 0.0)
         half = stats.t.ppf(0.975, len(d) - 1) * stats.sem(d)
         ci = f"[{d.mean() - half:+.3f}, {d.mean() + half:+.3f}]"
         print(f"  {column:<24}{len(d):>3}{d.mean():>+11.3f}{ci:>20}{p:>8.3f}")
