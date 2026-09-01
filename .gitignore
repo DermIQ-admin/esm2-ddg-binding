@@ -55,3 +55,7 @@ Thumbs.db
 # part of the repo a reviewer reads.
 PLAN.md
 CLAUDE.md
+
+# Training logs are transient; the curves that matter are in metrics.json
+# under each run's "training" key.
+logs/
