@@ -134,6 +134,58 @@ class DdgRegressor(nn.Module):
         """
         self.esm.gradient_checkpointing_enable()
 
+    def apply_lora(self, r: int = 8, alpha: int = 16, dropout: float = 0.05,
+                   target_modules: tuple[str, ...] = ("query", "value")) -> None:
+        """Replace full backbone fine-tuning with low-rank adapters.
+
+        WHAT PEFT ACTUALLY DOES HERE, since the call is one line and hides a lot.
+        For each targeted Linear layer with weight W (d_out x d_in), LoRA freezes
+        W and adds a trainable low-rank correction:
+
+            h = W x  +  (alpha / r) * B (A x)
+
+        A is (r x d_in), B is (d_out x r), and r is small — 8 here against a
+        hidden size of 640. A is randomly initialised and B is initialised to
+        ZERO, so at step 0 the correction is exactly zero and the model is
+        numerically identical to the frozen backbone. Training can only move it
+        away from that starting point, which is why LoRA behaves like a
+        regulariser rather than like a smaller model.
+
+        `get_peft_model` walks the module tree, swaps every module whose name
+        matches `target_modules` for a LoRA-wrapped version, and sets
+        requires_grad=False on everything else it owns. It does NOT touch
+        `self.head`, which stays fully trainable — the head is randomly
+        initialised and has to learn from scratch, so freezing it would leave
+        the model unable to fit anything at all.
+
+        Targeting query and value (not key, not the MLP) is the configuration
+        from the original LoRA paper and the usual default. It is exposed as an
+        argument rather than hard-coded because "which layers to adapt" is
+        exactly the knob AbTune reports mattering most.
+
+        Two reasons this is on the roadmap, and they are different:
+
+          1. As REGULARISATION on 150M. Full fine-tuning here is 2-4x more
+             variable across replicates than a frozen probe, and the honest
+             splits show it overfitting. Cutting trainable parameters by ~99%
+             attacks that directly.
+          2. As a REQUIREMENT for 650M, which does not fit a 24GB card under
+             full fine-tuning. LoRA removes the AdamW optimizer state and the
+             backbone gradients, which is exactly what overflows.
+        """
+        from peft import LoraConfig, get_peft_model
+
+        self.esm = get_peft_model(self.esm, LoraConfig(
+            r=r,
+            lora_alpha=alpha,
+            lora_dropout=dropout,
+            target_modules=list(target_modules),
+            bias="none",
+            # No task_type: this is a bare encoder whose outputs we pool
+            # ourselves. Setting one would make PEFT attach a task head we do
+            # not want and would not use.
+        ))
+
     def embed(self, input_ids: torch.Tensor, attention_mask: torch.Tensor) -> torch.Tensor:
         """Mask-aware mean pooling. (batch, seq) -> (batch, hidden).
 

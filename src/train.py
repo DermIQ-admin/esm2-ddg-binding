@@ -203,7 +203,17 @@ def main() -> None:
     parser.add_argument("--split-column", default="split_pdb_id", choices=SPLIT_COLUMNS)
     parser.add_argument("--epochs", type=int, default=config["training"]["epochs"])
     parser.add_argument("--batch-size", type=int, default=config["training"]["batch_size"])
-    parser.add_argument("--lr", type=float, default=config["training"]["learning_rate"])
+    # Resolved after parsing: LoRA and full fine-tuning want different learning
+    # rates, and silently reusing 2e-5 for LoRA would under-train the adapters
+    # and produce a misleading "LoRA is worse" result. See below.
+    parser.add_argument("--lr", type=float, default=None)
+    parser.add_argument("--lora", action="store_true",
+                        help="low-rank adapters instead of full fine-tuning")
+    parser.add_argument("--lora-r", type=int, default=8)
+    parser.add_argument("--lora-alpha", type=int, default=16)
+    parser.add_argument("--lora-dropout", type=float, default=0.05)
+    parser.add_argument("--lora-targets", nargs="+", default=["query", "value"],
+                        help="which Linear layers get adapters")
     # 4096, matching the config that was actually benchmarked (8 x 512 -> 10.9 GB
     # peak on the 150M). An earlier default of 8192 was set by eye rather than
     # from that measurement: it roughly doubles activation memory, and combined
@@ -228,6 +238,19 @@ def main() -> None:
                              "varies WHICH COMPLEXES are held out, which --seed cannot")
     parser.add_argument("--results-dir", type=Path, default=RESULTS_DIR)
     args = parser.parse_args()
+
+    # LoRA initialises B to zero, so the adapters start as an exact no-op and
+    # every step has to move them away from nothing. At 2e-5 -- tuned for
+    # nudging pretrained weights that are already in a good place -- they barely
+    # move, and the run would report LoRA as worse when what it actually
+    # measured was an under-trained adapter. An order of magnitude higher is the
+    # usual starting point. Overridable, and printed either way so the number in
+    # the results is never implicit.
+    LORA_DEFAULT_LR = 2e-4
+    if args.lr is None:
+        args.lr = LORA_DEFAULT_LR if args.lora else config["training"]["learning_rate"]
+        why = "LoRA default" if args.lora else "config"
+        print(f"Learning rate: {args.lr:g}  ({why})")
 
     set_seed(args.seed)
     info = describe_device()
@@ -256,14 +279,26 @@ def main() -> None:
         pooling=config["model"]["pooling"],
         head_hidden_dim=config["model"]["head_hidden_dim"],
         dropout=config["model"]["dropout"],
-    ).to(device)
+    )
+    total = sum(p.numel() for p in model.parameters())
+    if args.lora:
+        # Before checkpointing: PEFT swaps modules, so wrap first and let
+        # checkpointing apply to the adapted model.
+        model.apply_lora(r=args.lora_r, alpha=args.lora_alpha,
+                         dropout=args.lora_dropout,
+                         target_modules=tuple(args.lora_targets))
+    model = model.to(device)
     if args.gradient_checkpointing:
         model.gradient_checkpointing_enable()
 
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    print(f"\nModel: {trainable / 1e6:.1f}M trainable parameters, "
-          f"loss=Huber(delta={config['training']['huber_delta']}), "
-          f"lr={args.lr}, bf16 autocast, no GradScaler")
+    mode = (f"LoRA r={args.lora_r} alpha={args.lora_alpha} on {args.lora_targets}"
+            if args.lora else "full fine-tune")
+    print(f"\nModel: {mode}")
+    print(f"  {trainable / 1e6:.2f}M trainable of {total / 1e6:.1f}M "
+          f"({trainable / total:.1%})")
+    print(f"  loss=Huber(delta={config['training']['huber_delta']}), "
+          f"lr={args.lr:g}, bf16 autocast, no GradScaler")
 
     if args.limit_batches:
         # Section 8 step 1: mechanical correctness on a handful of batches.
@@ -299,7 +334,11 @@ def main() -> None:
     # tell which partition and which training run produced it.
     split_seed = (args.splits_file.replace("splits_seed", "").replace(".csv", "")
                   if args.splits_file != "splits.csv" else "42")
-    name = f"finetune_{tag}_{args.split_column}_split{split_seed}_seed{args.seed}"
+    # A distinct family name, not a suffix: replicates.method_family() splits on
+    # the backbone tag and compares families EXACTLY, so "finetune_lora" and
+    # "finetune" stay separate rather than one silently absorbing the other.
+    method = "finetune_lora" if args.lora else "finetune"
+    name = f"{method}_{tag}_{args.split_column}_split{split_seed}_seed{args.seed}"
     args.results_dir.mkdir(parents=True, exist_ok=True)
     predictions.to_csv(args.results_dir / f"preds_{name}.csv", index=False)
 
