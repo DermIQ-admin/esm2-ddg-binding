@@ -466,11 +466,14 @@ studied. The work worth knowing about, and how this repo sits relative to it:
   position. Implemented here as the floor, and the context ablation above measures *why* it is
   only a floor for **binding** specifically.
 - **MINT** — Ullanat, Jing, Sledzieski & Berger, *[Learning the language of protein–protein
-  interactions](https://pmc.ncbi.nlm.nih.gov/articles/PMC11956943/)* (Nature Communications,
-  2025). Keeps self-attention within chains and adds cross-chain attention blocks to ESM-2, and
-  reports the strongest sequence-only result on SKEMPI's binding task. This is the direct answer
-  to the blindness the ρ = 0.888 ablation measures, and the natural next architecture if the
-  pooling fix is not enough.
+  interactions](https://www.nature.com/articles/s41467-025-67971-3)* (Nature Communications
+  17:1199, 2026). Keeps self-attention within chains, adds cross-chain attention blocks to ESM-2,
+  and pretrains on ~96M interactions from STRING; reports a 29% improvement on SKEMPI and the
+  strongest published sequence-only result. This is the direct answer to the blindness the
+  ρ = 0.888 ablation measures. Worth noting its downstream setup — wild-type and mutant groups
+  embedded separately, aggregated, passed to an MLP — is close to the frozen probe that wins on
+  the honest splits here, which suggests the architectural change rather than the fine-tuning is
+  where its gain lives.
 - **AbTune** — Xu & Bonvin, *[AbTune: layer-wise selective fine-tuning of protein language
   models for antibodies](https://academic.oup.com/bib/article/27/4/bbag374/8732927)* (Briefings
   in Bioinformatics, 2026). Finds that depth-selective fine-tuning **consistently beats
@@ -483,8 +486,12 @@ studied. The work worth knowing about, and how this repo sits relative to it:
 - **ProBASS** — Gurusinghe, Wu, DeGrado & Shifman, *[ProBASS — a language model with sequence
   and structural features for predicting the effect of mutations on binding
   affinity](https://pmc.ncbi.nlm.nih.gov/articles/PMC12151015/)* (Bioinformatics, 2025).
-  Concatenates ESM-2 sequence embeddings with structural embeddings into a 1,792-feature vector
-  and fits CatBoost, on SKEMPI plus their own measurements.
+  Concatenates ESM-2 sequence embeddings with structure-conditioned **ESM-IF1** embeddings into a
+  1,792-feature vector and fits CatBoost, on SKEMPI plus their own measurements. It needs a
+  structure only of the *wild-type* complex, not one per variant — the authors note backbone
+  positions are near-identical between wild type and mutant and reuse the wild-type embedding. So
+  it and the `interface_location` result above rest on the same input; the difference is what each
+  extracts from it, a learned per-residue embedding against a five-level categorical.
 - **3D-ΔΔG** — *[A dual-channel prediction model for protein–protein binding affinity changes
   following mutation based on protein 3D structures](https://onlinelibrary.wiley.com/doi/10.1002/prot.26837)*
   (Proteins, 2025; [code](https://github.com/ShiLab-GitHub/3D-DDG)). A PLM over the side-chain
@@ -500,7 +507,28 @@ studied. The work worth knowing about, and how this repo sits relative to it:
 - **Seq2Bind** — Ma et al., *[Seq2Bind webserver for binding site prediction from sequences using
   fine-tuned protein language models](https://academic.oup.com/nargab/article/7/4/lqaf154/8340159)*
   (NAR Genomics and Bioinformatics, 2025). Fine-tunes ProtBERT, ProtT5, ESM-2 and a BiLSTM on
-  SKEMPI 2.0, with binding-site identification as the headline application.
+  SKEMPI 2.0, but evaluates interface-residue recovery under an N-factor metric rather than
+  held-out ΔΔG regression, so it does not bear directly on the numbers here. One observation does:
+  their LSTM's predictions span only −0.368 to 0.07 kJ/mol across 6,063 complexes — about a tenth
+  of a kcal/mol end to end — which is the same range collapse visible in the centre panel of the
+  scatter figure in `report/`.
+
+**The field has moved in the same direction, recently and independently.** Two papers measure the
+leakage gradient directly, which is the strongest external support for this repo's central claim:
+
+- **CATH-ddG** — Yu, Bi, Ma, Li & Wang, *[CATH-ddG: towards robust mutation effect prediction on
+  protein–protein interactions out of CATH homologous superfamily](https://academic.oup.com/bioinformatics/article/41/Supplement_1/i362/8199350)*
+  (Bioinformatics 41(S1), 2025). States plainly that "deep learning models may overestimate
+  performance due to potential data leakage", curates a train/test split by CATH homologous
+  superfamily to mitigate it, and finds deep models beat physics-based approaches such as FoldX
+  and flex ddG on *easy* mutations while generalizing poorly on hard ones.
+- **SE3Bind** — *[SE3Bind: SE(3)-equivariant model for antibody–antigen binding affinity
+  prediction](https://www.biorxiv.org/content/10.64898/2026.01.17.700115v1.full)* (bioRxiv
+  preprint, 2026). Tabulates the gradient outright: **TopNetTree falls from ρ = 0.85 under a
+  random K-fold split to 0.38 under an ECOD split**, and **Graphinity from 0.87 to 0.25** under
+  CDR-loop clustering. The 0.660 → 0.178 measured here is the same phenomenon at the same
+  magnitude, which is the main reason to read the honest column as the correct one rather than as
+  a failed run.
 
 **On comparing numbers across these papers.** They report under a range of split definitions,
 and the gap measured here — 0.66 against 0.18 from one model, one dataset and one set of

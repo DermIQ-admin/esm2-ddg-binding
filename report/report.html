@@ -125,11 +125,20 @@ is the deliberately harder and more useful one, since it applies to the many ant
 no solved co-crystal, and SKEMPI 2.0 makes it measurable: experimental K<sub>d</sub> for wild-type and
 mutant complexes of known structure.</p>
 
-<div class="flag">
-  <span class="flag-label">To write — the link to your own interface-energetics work</span>
-  Two or three sentences on what your published work established experimentally, and why a sequence-only
-  learned model is the complementary question rather than a restatement of it. Left blank deliberately.
-</div>
+<p>My doctoral work approached the same interface from the opposite side. In <i>Nature Communications</i>
+(2024) we showed that co-translational assembly pathways in <i>S. cerevisiae</i> are governed by how interface
+energy is distributed across a complex rather than by its total magnitude; the follow-up in <i>Cell</i> (2025),
+with the Levy lab, found that structural signatures — subunits mutually stabilising one another — predict which
+pairs assemble. Both are structure-first results: the prediction came from a solved or modelled complex, and my
+own contribution was the experimental half that tested it, by selective ribosome profiling and RIP-qPCR on
+strains built for the purpose.</p>
+
+<p>That is why the sequence-only formulation here is the complementary question rather than a restatement of it.
+The published work presumes a structure and asks what its energetics predict; this asks how much of the same
+information survives once the structure is removed — the situation for most antibody–antigen pairs. The answer
+§4 arrives at is that less survives than reported numbers in this area suggest, and the fact that one coarse
+structural annotation recovers more than any amount of sequence pretraining is the structure-first conclusion
+arriving again from the opposite direction.</p>
 
 <h2>2. Data, and the split that decides everything</h2>
 
@@ -440,23 +449,51 @@ a confirmed mechanism.</p>
   location/complex confound.</li>
   <li><b>Combine chemistry with the embeddings.</b> Indistinguishable on the honest splits does not mean they
   carry the same information; one cheap fit tests whether the errors are correlated.</li>
-  <li><b>Position-specific pooling at the mutated residue,</b> concatenated with the mean-pooled context; the
-  dataset already carries the token index. Lower priority than it was — the chemistry baseline suggests the
-  ceiling may not be a pooling problem.</li>
   <li><b>Attack split-seed variance, which LoRA did not.</b> LoRA fixed the training-seed kind and left this one
   untouched, and it is the kind that limits a generalisation claim. Layer-selective fine-tuning is the concrete
   candidate — AbTune reports 50–75% of layers beating full depth. LoRA also now unblocks 650M.</li>
+  <li><b>Position-specific pooling at the mutated residue,</b> concatenated with the mean-pooled context; the
+  dataset already carries the token index. Lower priority than it was — the chemistry baseline suggests the
+  ceiling may not be a pooling problem.</li>
   <li><b>Diagnose the antibody-subset inversion</b> before trusting any antibody number: is CDR sequence
   variability being read as noise, or are the loops simply out of distribution for a general protein language
   model?</li>
 </ul>
 
-<div class="flag">
-  <span class="flag-label">To write — related work, in your own words, with links</span>
-  One paragraph positioning against MINT, ProBASS, AbTune, Seq2Bind and 3D-ΔΔG — AbTune is the natural comparison,
-  being antibody-focused, which makes §4's AB/AG numbers the place to compare. Worth checking rather than
-  asserting: which of them report on complex-level rather than mutation-level splits.
-</div>
+<h2>7. Related work</h2>
+
+<p>The closest sequence-only comparison is <b>MINT</b> (<i>Nature Communications</i>, 2026), which extends ESM-2
+to encode interacting chains jointly through cross-attention and pretrains on STRING, reporting a 29% improvement
+on SKEMPI and the strongest published performance for a model using sequence alone. Its downstream setup —
+separate embeddings of the wild-type and mutant groups, aggregated and passed to an MLP — is close to the frozen
+probe that wins on the honest splits here, which suggests the architectural change rather than the fine-tuning is
+where its gain lives. <b>ProBASS</b> (Gurusinghe et al., 2025) is not sequence-only: it combines ESM-2 embeddings
+with structure-conditioned vectors from ESM-IF1. It needs a structure only of the wild-type complex, not one per
+variant — the authors note backbone positions are near-identical between wild type and mutant and reuse the
+wild-type embedding — so both it and <span class="mono">interface_location</span> in §4 rest on one structure.
+The difference is what each extracts from it: a learned per-residue embedding against a five-level categorical,
+and the five-level version already recovers much of the gain. <b>Seq2Bind</b> (<i>NAR Genomics and
+Bioinformatics</i>, 2025) fine-tunes ProtBERT, ProtT5, ESM-2 and a BiLSTM on SKEMPI 2.0, but evaluates
+interface-residue recovery under an N-factor metric rather than held-out ΔΔG regression, so it does not bear
+directly on the numbers here — though its own observation that the LSTM's predictions span only −0.368 to 0.07
+kJ/mol across 6,063 complexes, about a tenth of a kcal/mol end to end, is the same range collapse visible in the
+centre panel of Figure 1. <b>AbTune</b> (Xu &amp; Bonvin, <i>Briefings in Bioinformatics</i>, 2026) is the
+natural antibody comparison and takes the more interesting position: it fine-tunes at test time, per sequence,
+explicitly to partially bypass the need for generalization, and finds depth-selective tuning of 50–75% of layers
+beats full depth. That is a direct response to the failure mode measured in §4 — and the reason layer-selective
+fine-tuning is the first architectural item under next steps rather than the last.</p>
+
+<p>On the question §2 turns on, the field has moved recently and in the same direction. <b>CATH-ddG</b>
+(<i>Bioinformatics</i>, 2025) states plainly that deep learning models may overestimate performance through data
+leakage, proposes train/test splits by CATH homologous superfamily, and notes that deep models beat physics-based
+approaches on easy mutations while generalizing poorly on hard ones. <b>SE3Bind</b> (bioRxiv preprint, 2026)
+tabulates the gradient directly: TopNetTree falls from ρ = 0.85 under a random K-fold split to 0.38 under an ECOD
+split, and Graphinity from 0.87 to 0.25 under CDR-loop clustering. The 0.660 → 0.178 measured here is the same
+phenomenon at the same magnitude, which is the main reason to read the honest column as the correct one rather
+than as a failed run. Two caveats on all of the above: none of these numbers are directly comparable to the
+results table in §4 — they differ in metric, in mutation scope, and in whether structure is used — and MINT's
+SKEMPI protocol in particular should be checked at the split level before its headline is set against anything
+here.</p>
 
 <footer>
   Data: SKEMPI 2.0 (Jankauskaitė et al., <i>Bioinformatics</i> 2019), life.bsc.es/pid/skempi2, licensed
