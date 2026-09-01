@@ -1,4 +1,4 @@
-"""The siamese ESM-2 regressor. PLAN.md section 7.3.
+"""The siamese ESM-2 regressor.
 
     wt_seq  --\
                >-- [shared ESM-2] -- mean-pool -- concat[wt, mut, mut-wt] -- head -- ddG
@@ -29,14 +29,14 @@ POOLING: MEAN FIRST, DELIBERATELY
 ---------------------------------
 Mask-aware mean pooling over the whole sequence is the simple option, not the
 best one. Position-specific pooling at the mutated residue is the planned v2
-(section 7.3) — ddG is a local perturbation, so averaging over 500 residues
+— ddG is a local perturbation, so averaging over 500 residues
 dilutes the signal from the one that changed. `pooling="position"` is therefore
 recognised and deliberately NOT implemented: building the simple version first
 and iterating is part of the story, and `dataset.py` already emits
 `mutation_token_index` so the upgrade is a small change, not a redesign.
 
 Note the mean pools over <cls> and <eos> as well as the residues, because both
-carry attention_mask == 1. That matches section 7.3's snippet verbatim, and
+carry attention_mask == 1. The frozen-embedding baseline pools identically, and
 src/baselines/linear_probe.py matches it too, so the frozen and fine-tuned
 numbers stay comparable. Change it in one place and you must change it in both.
 
@@ -75,7 +75,7 @@ class DdgRegressor(nn.Module):
     Args:
         backbone_name: any ESM-2 checkpoint. The head sizes itself from
             `config.hidden_size`, so 35M / 150M / 650M all work unchanged.
-        freeze_backbone: True reproduces the section 7.2 frozen baseline
+        freeze_backbone: True reproduces the frozen-embedding baseline
             (though linear_probe.py is far cheaper, since it caches).
         pooling: "mean" only. "position" is the planned v2 and raises.
     """
@@ -92,7 +92,7 @@ class DdgRegressor(nn.Module):
 
         if pooling == "position":
             raise NotImplementedError(
-                "position-specific pooling is the deliberate v2 (PLAN.md 7.3). "
+                "position-specific pooling is the deliberate v2. "
                 "dataset.py already provides mutation_token_index for it."
             )
         if pooling != "mean":

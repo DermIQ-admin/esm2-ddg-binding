@@ -1,0 +1,36 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  invariant:
+    name: no-leakage invariant
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      # torch is deliberately not installed here. The split invariant is the
+      # claim this repo stands on, and testing it needs only the persisted
+      # split files in data/processed/ — which are committed — so CI stays
+      # fast, CPU-only, and independent of the CUDA-pinned requirements.txt.
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pandas numpy scikit-learn pyyaml pytest
+
+      - name: Enforce the invariant (no complex in two splits)
+        run: python -m pytest tests/ -q

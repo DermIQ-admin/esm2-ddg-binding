@@ -1,6 +1,5 @@
 """Parse SKEMPI, build complex sequences, compute ddG, apply the v1 filters.
 
-Implements PLAN.md sections 6.2-6.4.
 
 WHY THIS MODULE IS MORE THAN A CSV PARSE
 ----------------------------------------
@@ -54,7 +53,7 @@ RAW_DIR = REPO_ROOT / "data" / "raw"
 PROCESSED_DIR = REPO_ROOT / "data" / "processed"
 MAPPING_DIR = RAW_DIR / "PDBs" / "PDBs"
 
-R_GAS = 1.987e-3  # kcal/(mol*K), PLAN.md section 6.3
+R_GAS = 1.987e-3  # kcal/(mol*K)
 DEFAULT_TEMP_K = 298.15
 
 THREE_TO_ONE = {
@@ -119,8 +118,8 @@ def build_complex(pdb_field: str) -> tuple[str, dict[str, int]]:
     then `offset[chain] + cleaned_position - 1`.
 
     The chains are concatenated with no separator token: ESM-2 has no
-    chain-break token, and PLAN.md section 7.1 specifies feeding the
-    concatenated interacting chains. Order follows `#Pdb` so it is reproducible.
+    chain-break token, and the model is fed the concatenated interacting
+    chains. Order follows `#Pdb` so it is reproducible.
     """
     parts = pdb_field.split("_")
     pdb_id, groups = parts[0], parts[1:]
@@ -141,7 +140,7 @@ def build_complex(pdb_field: str) -> tuple[str, dict[str, int]]:
 def apply_mutation(sequence: str, index: int, wt_aa: str, mut_aa: str) -> str:
     """Return `sequence` with position `index` substituted, verifying the WT.
 
-    The assert is load-bearing, not decoration (PLAN.md section 7.1). An
+    The assert is load-bearing, not decoration. An
     off-by-one here would silently mutate the wrong residue and quietly poison
     every label in the dataset — the single most common bug in this kind of
     code. Crashing loudly is strictly better than training on it.
@@ -162,7 +161,7 @@ def compute_ddg(kd_wt_m: float, kd_mut_m: float, temp_k: float = DEFAULT_TEMP_K)
 
     Positive = destabilizing (weaker binding). Negative = stabilizing.
 
-    Sanity check from PLAN.md section 6.3: a mutant Kd of 1 uM against a
+    Sanity check: a mutant Kd of 1 uM against a
     wild-type Kd of 1 nM (1000x weaker binding) gives ddG ~ +4.09 kcal/mol.
     """
     dg_wt = R_GAS * temp_k * np.log(kd_wt_m)
@@ -216,7 +215,7 @@ def load_raw() -> pd.DataFrame:
 
 
 def filter_rows(df: pd.DataFrame) -> pd.DataFrame:
-    """Apply the PLAN.md section 6.4 filters, reporting each drop."""
+    """Apply the v1 filters, reporting each drop."""
     print(f"  all rows                                  : {len(df)}")
 
     n_mut = df["mutation_cleaned"].astype(str).str.count(",") + 1
@@ -321,7 +320,7 @@ def main() -> None:
     assert abs(check - 4.09) < 0.01, f"sign convention broken: got {check:+.3f}"
     print(f"ddG sign check: 1 uM vs 1 nM -> {check:+.3f} kcal/mol (expected +4.09)  OK\n")
 
-    print("Filtering (PLAN.md section 6.4):")
+    print("Filtering:")
     df = filter_rows(load_raw())
 
     print("\nBuilding sequences and computing ddG...")

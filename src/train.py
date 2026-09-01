@@ -1,4 +1,4 @@
-"""Fine-tune the siamese ESM-2 regressor. PLAN.md section 8.
+"""Fine-tune the siamese ESM-2 regressor.
 
     python -m src.train                          # split_pdb_id, the honest primary
     python -m src.train --split-column split_mutation
@@ -31,7 +31,7 @@ Section 8 invites this check explicitly, and two things have moved on:
 
 MODEL SELECTION IS ON VALIDATION SPEARMAN, NOT VALIDATION LOSS
 --------------------------------------------------------------
-Spearman is the primary metric (section 9), and the two genuinely diverge:
+Spearman is the primary metric, and the two genuinely diverge:
 Huber loss keeps improving by tightening absolute calibration long after the
 rank ordering has stopped changing. Selecting on loss would hand back a
 checkpoint that is better calibrated and worse at the thing we actually report.
@@ -119,7 +119,7 @@ def train(
 ) -> tuple[nn.Module, dict]:
     """Fine-tune, keeping the epoch with the best validation Spearman."""
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
-    loss_fn = nn.HuberLoss(delta=huber_delta)  # section 8, deliberate over MSE
+    loss_fn = nn.HuberLoss(delta=huber_delta)  # deliberate over MSE
 
     best = {"rho": -np.inf, "epoch": -1, "state": None}
     history = []
@@ -220,7 +220,7 @@ def main() -> None:
     parser.add_argument("--gradient-checkpointing", action="store_true",
                         help="needed for 650M; roughly free on 150M")
     parser.add_argument("--limit-batches", type=int, default=None,
-                        help="section 8 step 1: a tiny mechanical-correctness run")
+                        help="a tiny mechanical-correctness run on CPU")
     parser.add_argument("--seed", type=int, default=config["seed"],
                         help="training stochasticity: head init, dropout, batch order")
     parser.add_argument("--splits-file", default="splits.csv",

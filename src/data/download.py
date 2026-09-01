@@ -1,6 +1,5 @@
 """Download the raw SKEMPI 2.0 dataset.
 
-Implements PLAN.md section 6.1.
 
 The raw data is not committed to the repo (see .gitignore) — redistribution and
 repo bloat both cut against it. This script is the reproducible substitute:

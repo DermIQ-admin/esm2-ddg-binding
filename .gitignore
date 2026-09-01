@@ -16,8 +16,8 @@ venv/
 data/raw/*
 !data/raw/.gitkeep
 
-# data/processed/ is deliberately NOT ignored — PLAN.md section 5 wants the
-# cleaned splits committed so results are reproducible without re-downloading.
+# data/processed/ is deliberately NOT ignored — the cleaned splits are committed
+# so results are reproducible without re-downloading the raw data.
 
 # --- Model artifacts --------------------------------------------------------
 checkpoints/
@@ -31,12 +31,12 @@ wandb/
 .wandb/
 
 # --- Results ----------------------------------------------------------------
-# results/metrics.json IS committed � it is the numbers the README quotes.
+# results/metrics.json IS committed — it is the numbers the README quotes.
 # The per-run prediction CSVs are regenerable from the baselines and would
 # otherwise churn ~2MB per experiment, so they are not.
 results/preds_*.csv
 # Training logs are transient; the curves that matter live in metrics.json
-# under each run's "training" key, and in CLAUDE.md.
+# under each run's "training" key.
 train_*.log
 
 # --- Caches -----------------------------------------------------------------
@@ -49,3 +49,9 @@ embeddings_cache/
 Thumbs.db
 .vscode/
 .idea/
+
+# --- Working notes, not part of the published project ------------------------
+# Personal planning / assistant-context files. They stay on disk but are not
+# part of the repo a reviewer reads.
+PLAN.md
+CLAUDE.md

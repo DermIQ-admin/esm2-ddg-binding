@@ -1,10 +1,10 @@
-"""Aggregate replicate runs. PLAN.md section 9 (error bars), section 13.1 (antibodies).
+"""Aggregate replicate runs: error bars, and the antibody/antigen subset.
 
 Prints four things:
 
   summarize()           mean +/- std per method, split by variance source
   paired_comparison()   finetune - probe on ALL test rows, paired, with CI and p
-  summarize_antibody()  the AB/AG subset (section 13.1), pooled over replicates
+  summarize_antibody()  the AB/AG subset, pooled over replicates
   paired_comparison()   the same paired test restricted to AB/AG rows
 
 TWO SOURCES OF VARIANCE, REPORTED SEPARATELY
@@ -86,8 +86,8 @@ def method_family(method: str) -> tuple[str, str]:
     version matched with startswith(), which silently made 'finetune_lora' a
     'finetune' -- last write winning by dict order. On a mocked-up LoRA run that
     turned a true -0.02 difference into a reported +0.680 at p=0.000 with a
-    zero-width CI: maximally confident and completely wrong. PLAN.md 7.4 puts a
-    LoRA run on the roadmap, so that collision was scheduled, not theoretical.
+    zero-width CI: maximally confident and completely wrong. A LoRA run is on
+    the roadmap, so that collision was scheduled, not theoretical.
     """
     head, _, column = method.partition("_split_")
     return head.partition("_esm2_")[0], column
@@ -124,7 +124,7 @@ def summarize(runs: list[dict]) -> None:
 
 
 def summarize_antibody(runs: list[dict]) -> None:
-    """PLAN.md section 13.1 -- the antibody/antigen subset.
+    """The antibody/antigen subset.
 
     evaluate.py has been computing this all along into
     error_analysis.antibody_antigen; nothing read it. It is the subset that
@@ -147,7 +147,7 @@ def summarize_antibody(runs: list[dict]) -> None:
     for r in with_ab:
         by_method[r["method"]].append(r)
 
-    print(f"\n{'ANTIBODY / ANTIGEN SUBSET  (PLAN.md 13.1)':<91}")
+    print(f"\n{'ANTIBODY / ANTIGEN SUBSET':<91}")
     print(f"\n{'method':<40}{'AB/AG rows':<16}{'n':>3}"
           f"{'mean':>8}{'std':>8}{'min':>8}{'max':>8}")
     print("-" * 91)
@@ -240,7 +240,7 @@ def main() -> None:
     paired_comparison(runs, "spearman", "ALL TEST ROWS")
     summarize_antibody(runs)
     paired_comparison(runs, "antibody_spearman", "ANTIBODY / ANTIGEN ROWS ONLY")
-    print("\n  The AB/AG subset was pre-specified in PLAN.md 13.1 before any results\n"
+    print("\n  The AB/AG subset was pre-specified before any results\n"
           "  existed, so it is a planned comparison rather than a subgroup found by\n"
           "  searching. It is still one subgroup out of several in error_analysis --\n"
           "  weigh it accordingly.")

@@ -1,7 +1,7 @@
 """Enforce the no-leakage invariant on the grouped splits.
 
-Implements PLAN.md section 6.5, which asks for the inline asserts to become a
-real pytest rather than a comment in a script.
+The inline asserts from the splitting code, promoted to a real pytest rather
+than a comment in a script.
 
     THE INVARIANT: no protein complex may appear in more than one split.
 
@@ -61,7 +61,7 @@ def synthetic() -> pd.DataFrame:
 
 @pytest.mark.parametrize("key", GROUP_KEYS)
 def test_no_group_crosses_splits(synthetic, key):
-    """The three assertions from PLAN.md section 6.5, as a real test."""
+    """The three splitting assertions, as a real test."""
     assignment = split_by_group(synthetic[key])
     members = {
         name: set(synthetic.loc[assignment == name, key])

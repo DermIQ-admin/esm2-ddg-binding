@@ -5,24 +5,17 @@
 # venv). Pinning only what we chose keeps this readable and lets pip resolve transitive
 # versions itself; `pip freeze > requirements.lock` if a byte-exact lock is ever needed.
 #
-#   pip install -r requirements.txt
+#   pip install -r requirements-cpu.txt
 #
-# --- PyTorch / CUDA -----------------------------------------------------------------
-# The `+cu130` local version tag identifies the CUDA 13.0 build. It is NOT on PyPI, so
-# the extra index below is required — without it pip resolves to the CPU-only wheel and
-# training silently falls back to CPU.
-#
-# For a CPU-only install use requirements-cpu.txt, which is this file with the extra
-# index dropped and the torch pin changed to `torch==2.13.0`.
-# For a different CUDA version, swap cu130 for your channel (cu128 / cu132) — see
-# https://pytorch.org/get-started/locally/ and match it to your driver.
+# --- PyTorch (CPU) ------------------------------------------------------------------
+# CPU-only. Training the siamese model on CPU is impractically slow, but the data
+# pipeline, the tests and the evaluation harness all run fine here. For the GPU build
+# use requirements.txt.
 #
 # torchvision and torchaudio are deliberately omitted: this project has no image or
 # audio component, and they add ~1 GB plus a version-pinning constraint for nothing.
 
---extra-index-url https://download.pytorch.org/whl/cu130
-
-torch==2.13.0+cu130
+torch==2.13.0
 
 # --- Model / training stack ---------------------------------------------------------
 # NOTE: transformers is 5.x. AutoModel / AutoTokenizer / AutoModelForMaskedLM are

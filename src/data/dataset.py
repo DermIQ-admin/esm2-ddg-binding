@@ -1,6 +1,5 @@
 """PyTorch Dataset and collate_fn for WT/mutant sequence pairs.
 
-Implements the data-loading half of PLAN.md section 7.3.
 
 WHAT THE MODEL CONSUMES
 -----------------------
@@ -10,7 +9,7 @@ sequence, once on the mutant — so each example is four tensors plus a target:
     wt_ids, wt_mask, mut_ids, mut_mask   ->  ddg
 
 `*_ids` are integer token ids; `*_mask` are 1 for real tokens and 0 for
-padding. The mask is not optional bookkeeping: section 7.3 mean-pools with
+padding. The mask is not optional bookkeeping: the model mean-pools with
 `(hidden * mask).sum(1) / mask.sum(1)`, so a wrong mask silently averages
 padding into the embedding rather than raising. That is the failure mode this
 module is written to make impossible.
@@ -45,7 +44,7 @@ Johannes's call, session 3: run every complex at its FULL length and exclude
 only what exceeds MAX_TOKENS = 2048. That drops 2 complexes (1KBH_A_B at 2122,
 3VR6_ABCDEF_GH at 3399) and 15 of 4829 rows — 0.3% — while keeping worst-case
 attention cost predictable at 2048 tokens. Everything else is fed whole, so
-"the concatenated interacting chains" of section 7.1 stays literally true and
+"the concatenated interacting chains" stays literally true and
 binding ddG stays binding ddG.
 
 The exclusion happens HERE, at load time, not in parse_skempi. The processed
@@ -57,7 +56,7 @@ TWO LIMITATIONS TO CARRY INTO THE README
     length. Rotary embeddings extrapolate, but quality there is not guaranteed.
   * the two excluded complexes are large multi-chain assemblies, and two of the
     three biggest complexes overall are antibody complexes — a small structured
-    cost to the section 13.1 antibody subset, not a random one.
+    cost to the antibody subset, not a random one.
 
 Usage (smoke test — prints shapes and verifies the WT/mutant token diff):
     python -m src.data.dataset
@@ -189,7 +188,7 @@ class DdgDataset(Dataset):
             "mut_seq": mut_seq,
             "ddg": float(row["ddg"]),
             # Index into the SEQUENCE. collate_fn converts it to a token index.
-            # Needed by the zero-shot baseline now, and by the section 7.3 v2
+            # Needed by the zero-shot baseline now, and by the planned v2
             # position-specific pooling later.
             "mutation_index": index,
         }
@@ -229,7 +228,7 @@ def make_collate_fn(tokenizer, pad_to_multiple_of: int | None = 8):
         )
 
         # +1 for the leading <cls>. Verified against the real tokenizer rather
-        # than trusted from PLAN.md section 7.1's comment.
+        # than trusted from a comment.
         mutation_token_index = torch.tensor(
             [r["mutation_index"] + 1 for r in records], dtype=torch.long
         )

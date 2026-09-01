@@ -1,16 +1,15 @@
 """Frozen-embedding baseline: cached ESM-2 embeddings + a small trained head.
 
-Implements PLAN.md section 7.2.
 
 Built BEFORE full fine-tuning. It is fast to iterate on, it validates the entire
 data pipeline and evaluation harness before any GPU hours get spent on the real
 thing, and it yields a second reportable baseline. Cheap experiment before
 expensive experiment.
 
-This is equivalent to `DdgRegressor(freeze_backbone=True)` from section 7.3, but
+This is equivalent to `DdgRegressor(freeze_backbone=True)`, but
 with the embeddings precomputed instead of recomputed every epoch — the same
 model, a tiny fraction of the compute. Feature construction is deliberately
-IDENTICAL to section 7.3's, `concat[wt, mut, mut - wt]`, so the comparison
+IDENTICAL to the fine-tuned model's, `concat[wt, mut, mut - wt]`, so the comparison
 against the fine-tuned model is apples-to-apples and the only thing that changes
 between them is whether the backbone learns.
 
@@ -65,13 +64,13 @@ SPLIT_COLUMNS = ["split_mutation", "split_pdb_id", "split_hold_out_proteins"]
 TOKEN_BUDGET = 16_384
 
 # Head hyperparameters. configs/config.yaml: model.head_hidden_dim / model.dropout
-# match section 7.3, deliberately. The learning rate is much higher than
+# match the fine-tuned model, deliberately. The learning rate is much higher than
 # training.learning_rate (2e-5) because that value is for a pretrained backbone
 # being nudged; a randomly-initialised head can and should move faster.
 HEAD_LR = 1e-3
 HEAD_EPOCHS = 300
 HEAD_BATCH = 256
-HUBER_DELTA = 1.0  # section 8 — deliberate over MSE, ddG has real outliers
+HUBER_DELTA = 1.0  # deliberate over MSE, ddG has real outliers
 PATIENCE = 40
 
 
@@ -85,7 +84,7 @@ def embed_sequences(
 ) -> np.ndarray:
     """Mean-pooled embeddings, one row per sequence. Shape (len(sequences), hidden).
 
-    MASK-AWARE MEAN POOLING, exactly as section 7.3 specifies:
+    MASK-AWARE MEAN POOLING, exactly as the fine-tuned model does:
 
         (hidden_states * mask).sum(1) / mask.sum(1)
 
@@ -96,7 +95,7 @@ def embed_sequences(
     whatever the model emits for <pad> — and nothing would raise.
 
     Note this pools over <cls> and <eos> along with the residues, because they
-    carry attention_mask == 1. That is what section 7.3's snippet does, and we
+    carry attention_mask == 1. That is what the fine-tuned model does, and we
     match it deliberately so the frozen and fine-tuned numbers stay comparable.
 
     Sorting by length before batching keeps similar lengths together, which
@@ -156,7 +155,7 @@ def build_or_load_cache(
     from transformers import AutoModel, AutoTokenizer
 
     # AutoModel, NOT AutoModelForMaskedLM — here we want hidden states, not
-    # vocabulary logits. This is the same class section 7.3's model wraps.
+    # vocabulary logits. This is the same class the siamese model wraps.
     print(f"  loading {backbone} ...")
     tokenizer = AutoTokenizer.from_pretrained(backbone)
     model = AutoModel.from_pretrained(
@@ -186,7 +185,7 @@ def build_or_load_cache(
 
 
 def build_features(df: pd.DataFrame, wt: dict, mut: dict) -> np.ndarray:
-    """concat[wt, mut, mut - wt] — section 7.3's feature construction, verbatim.
+    """concat[wt, mut, mut - wt] — the siamese model's feature construction, verbatim.
 
     The difference vector is doing most of the work: ddG is about what CHANGED,
     and giving the head that difference explicitly saves it from having to
@@ -219,7 +218,7 @@ def train_head(
     """Train the head, selecting the epoch by VALIDATION SPEARMAN.
 
     Selecting on Spearman rather than on the loss is deliberate: Spearman is the
-    primary metric (section 9), and the two do not always move together — Huber
+    primary metric, and the two do not always move together — Huber
     loss keeps improving by tightening calibration long after the rank ordering
     has stopped improving.
 
@@ -241,7 +240,7 @@ def train_head(
 
     head = make_head(x_train.shape[1]).to(device)
     optimizer = torch.optim.AdamW(head.parameters(), lr=HEAD_LR, weight_decay=0.01)
-    loss_fn = nn.HuberLoss(delta=HUBER_DELTA)  # section 8
+    loss_fn = nn.HuberLoss(delta=HUBER_DELTA)
 
     best_rho, best_state, best_epoch = -np.inf, None, 0
 
@@ -327,7 +326,7 @@ def main() -> None:
         for name, mask in masks.items():
             print(f"    {name:<6} {mask.sum():>5} rows")
 
-        # --- the MLP head (section 7.3's head, frozen backbone) --------------
+        # --- the MLP head (the siamese head, frozen backbone) ----------------
         head = train_head(
             features[masks["train"]], targets[masks["train"]],
             features[masks["val"]], targets[masks["val"]], device,

@@ -1,8 +1,8 @@
 """Zero-shot baseline: ESM-2 masked-marginal mutation scoring. No training.
 
-Implements PLAN.md section 7.1 (the method from Meier et al. 2021, ESM-1v).
+The method is Meier et al. 2021 (ESM-1v), applied to ESM-2.
 
-This is the cheapest baseline and is built FIRST — section 7 is explicit that
+This is the cheapest baseline and is built FIRST: the build order is
 each baseline is insurance against the next one silently failing. If the
 fine-tuned model cannot beat masked-marginal scoring, something is wrong.
 
@@ -29,7 +29,7 @@ WHY THIS IS ONLY AN APPROXIMATION HERE
 --------------------------------------
 ESM-2 was pretrained on single chains and scores sequence plausibility, which
 is closer to protein STABILITY than to BINDING. We are asking it about ddG of
-binding. Following section 7.1 we score the CONCATENATED interacting chains so
+binding. We therefore score the CONCATENATED interacting chains so
 the masked prediction has at least some awareness of the partner, but a
 language model has no explicit notion of an interface. Expect a modest
 correlation. A modest, honestly-reported floor is the point.
@@ -83,7 +83,7 @@ from src.utils import describe_device, set_seed
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 RESULTS_DIR = REPO_ROOT / "results"
 
-# configs/config.yaml: baselines.zero_shot_model, which is section 7.1's example.
+# configs/config.yaml: baselines.zero_shot_model, the smallest ESM-2.
 DEFAULT_BACKBONE = "facebook/esm2_t12_35M_UR50D"
 
 # Masked variants of one complex all share a length, so we batch by a TOKEN
@@ -173,7 +173,7 @@ def masked_marginal_scores(
 
     `df` must carry `sequence`, `mutation_index`, `wt_aa`, `mut_aa`.
 
-    `context="complex"` feeds the full concatenation (section 7.1's method).
+    `context="complex"` feeds the full concatenation (the default method).
     `context="chain"` feeds only the chain carrying the mutation — the ablation
     described in the module docstring. Positions are translated into the chain's
     local coordinates and the wild-type assert re-run there, so an error in the
@@ -226,7 +226,7 @@ def masked_marginal_scores(
         for row in group.itertuples(index=False):
             index = int(row.mutation_index)
 
-            # THE LOAD-BEARING ASSERT (section 7.1). An off-by-one here would
+            # THE LOAD-BEARING ASSERT. An off-by-one here would
             # silently score the wrong residue — the single most common bug in
             # this kind of code — and every downstream number would look
             # plausible and be wrong. We check the token the model actually saw,
@@ -255,7 +255,7 @@ def main() -> None:
     parser.add_argument("--backbone", default=DEFAULT_BACKBONE)
     parser.add_argument("--max-tokens", type=int, default=MAX_TOKENS)
     parser.add_argument("--context", default="complex", choices=("complex", "chain"),
-                        help="score the full concatenated complex (section 7.1) "
+                        help="score the full concatenated complex "
                              "or only the chain carrying the mutation (ablation)")
     parser.add_argument("--limit-complexes", type=int, default=None,
                         help="score only the first N complexes (a quick sanity run)")

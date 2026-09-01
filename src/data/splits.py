@@ -1,6 +1,5 @@
 """Train/val/test splits — grouped (primary) and mutation-level (comparison).
 
-Implements PLAN.md section 6.5.
 
 THE CORE METHODOLOGICAL COMMITMENT OF THIS PROJECT:
 
@@ -11,7 +10,7 @@ level lets the model memorize a complex from its training mutations and then
 "predict" held-out mutations of that same complex — an inflated number from a
 leaky split. Splitting by complex prevents that.
 
-We build THREE splits and report all three, which turns section 9's two-point
+We build THREE splits and report all three, which turns a two-point
 contrast into a leakage gradient:
 
     mutation           naive row-level split. Leaks by construction. The
@@ -70,7 +69,7 @@ def split_by_group(
 
     WHY THIS ISN'T A PLAIN train_test_split OVER THE GROUP NAMES
     ------------------------------------------------------------
-    PLAN.md section 6.5 splits the group names uniformly at random. That is
+    The obvious approach splits the group names uniformly at random. That is
     correct in principle, but SKEMPI's groups are enormously uneven — the ten
     largest `hold_out_proteins` groups hold about two-thirds of all rows, and
     group sizes span three orders of magnitude. Sampling groups uniformly

@@ -1,17 +1,17 @@
 # Configuration for the ESM-2 ddG(binding) regressor.
 #
-# Values here are taken from PLAN.md, not invented. Section references are
-# noted so any value can be traced back to the decision that produced it.
+# Every value here is a decision recorded in DECISIONS.md and the README,
+# not a default someone inherited. Comments say what each one buys.
 
-seed: 42                                    # section 6.5
+seed: 42
 
 data:
   raw_path: data/raw/skempi_v2.csv
   processed_dir: data/processed
-  separator: ";"                            # section 6.2 — VERIFY against the real file
+  separator: ";"                            # verified against the real SKEMPI file
   # Section 6.4 filtering rules for v1
-  single_point_only: true                   # section 3 — multi-point is out of scope
-  drop_abolished_binding: true              # section 6.3 — inequalities, not clean Kd
+  single_point_only: true                   # multi-point is out of scope for v1
+  drop_abolished_binding: true              # inequalities, not clean Kd
   # Section 6.4 said "decide empirically from EDA". Decided in session 3 against
   # the real tokenizer. TOKENS, not residues (ESM-2 adds <cls> and <eos>, so
   # tokens = residues + 2). ESM-2 is rotary, so there is no hard 1024 wall; this
@@ -20,40 +20,40 @@ data:
   max_tokens: 2048
 
 thermodynamics:
-  gas_constant: 1.987e-3                    # kcal/(mol*K), section 6.3
+  gas_constant: 1.987e-3                    # kcal/(mol*K)
   default_temperature_k: 298.15             # fallback when SKEMPI gives no Temperature
 
 split:
   strategy: complex                         # "complex" (primary) or "mutation" (comparison)
-  test_size: 0.15                           # section 6.5
-  val_size: 0.15                            # of the original total, per section 6.5's math
+  test_size: 0.15
+  val_size: 0.15                            # of the original total, not of the remainder
   random_state: 42
 
 model:
-  backbone: facebook/esm2_t30_150M_UR50D    # section 3 — 150M is the primary result
-  freeze_backbone: false                    # true -> the section 7.2 frozen baseline
-  pooling: mean                             # section 7.3 — "position" is the planned v2
+  backbone: facebook/esm2_t30_150M_UR50D    # 150M is the primary result
+  freeze_backbone: false                    # true -> the frozen-embedding baseline
+  pooling: mean                             # "position" is the planned v2
   head_hidden_dim: 256
   dropout: 0.1
 
 training:
-  learning_rate: 2.0e-5                     # section 8
-  loss: huber                               # section 8 — deliberate over MSE (ddG outliers)
+  learning_rate: 2.0e-5
+  loss: huber                               # deliberate over MSE (ddG outliers)
   huber_delta: 1.0
   batch_size: 8                             # starting point; 24GB allows tuning upward
   gradient_accumulation_steps: 1
   epochs: 10
   # Ada (sm_89) supports bf16, which needs no GradScaler. See the note in
-  # src/train.py about section 8's snippet using the deprecated fp16 API.
+  # src/train.py about the deprecated fp16 GradScaler API.
   mixed_precision: bf16
   checkpoint_every_n_steps: 500
 
 baselines:
-  zero_shot_model: facebook/esm2_t12_35M_UR50D   # section 7.1's example
+  zero_shot_model: facebook/esm2_t12_35M_UR50D   # the smallest ESM-2, for a fast floor
   embedding_cache_dir: embeddings_cache
 
 evaluation:
-  primary_metric: spearman                  # section 9
+  primary_metric: spearman                  # rank order matters more than calibration
   also_report: [pearson, rmse, mae]
   metrics_path: results/metrics.json
   figures_dir: results/figures

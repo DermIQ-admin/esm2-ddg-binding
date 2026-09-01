@@ -1,6 +1,5 @@
 """Evaluation harness: metrics, all three splits, error analysis, plots.
 
-Implements PLAN.md section 9.
 
 Every model — zero-shot, frozen-embedding, fine-tuned — reports through this
 one harness, so the numbers in the README are directly comparable rather than
@@ -16,7 +15,7 @@ never accidentally evaluate on the wrong rows.
     preds = pd.DataFrame({"uid": [...], "y_pred": [...]})
     report = evaluate_predictions(preds, name="zero_shot_35M")
 
-METRICS (section 9)
+METRICS
   PRIMARY: Spearman. Rank order is what matters downstream — you are ranking
   candidate mutations, not calibrating an absolute energy.
   Pearson and RMSE/MAE are reported ALONGSIDE it, never instead.
@@ -36,7 +35,7 @@ Every run is scored against all three split definitions:
 
 Expect a trained model to look best on `split_mutation` and worst on
 `split_hold_out_proteins`. That gap is the headline result of the project, not
-an embarrassment (section 6.5).
+an embarrassment.
 
 A CONTROL WORTH UNDERSTANDING: the zero-shot baseline never trains, so it
 cannot leak. Its numbers should come out roughly EQUAL across all three split
@@ -241,7 +240,7 @@ def error_analysis(
         for field, r in by_complex.sort_values("mae", ascending=False).head(8).iterrows()
     ]
 
-    # --- structurally unusual residues (section 9) -----------------------
+    # --- structurally unusual residues -----------------------------------
     # Proline breaks backbone geometry and glycine is uniquely flexible, so
     # mutations touching either are a plausible, physically-motivated failure
     # mode rather than an arbitrary slice of the data.
@@ -274,7 +273,7 @@ def error_analysis(
         **regression_metrics(large["ddg"], large["y_pred"], ranking_only),
     }
 
-    # --- antibody subset (section 13.1 comes free) ------------------------
+    # --- antibody subset (SKEMPI labels it, so this is free) --------------
     ab = test[test["hold_out_type"].astype(str).str.contains("AB/AG", na=False)]
     if len(ab) >= MIN_ROWS_FOR_METRIC:
         out["antibody_antigen"] = regression_metrics(ab["ddg"], ab["y_pred"], ranking_only)
@@ -320,7 +319,7 @@ def format_report(report: dict) -> str:
                 f"{cell(metrics.get('mae'), 8, '.3f')}"
             )
             # Marked, not hidden: seeing the inflated number next to the honest
-            # one is the whole pedagogical point of section 6.5.
+            # one is the whole pedagogical point of the split comparison.
             lines.append(row + ("   <- INVALID, trained on other rows" if contaminated and split == "test" else ""))
         lines.append("")
 
@@ -372,7 +371,7 @@ def plot_predictions(
     processed_dir: Path = PROCESSED_DIR,
     figures_dir: Path = FIGURES_DIR,
 ) -> Path:
-    """Predicted vs true scatter, train / val / test side by side (section 9)."""
+    """Predicted vs true scatter, train / val / test side by side."""
     import matplotlib
     matplotlib.use("Agg")  # no display on a headless run; write straight to file
     import matplotlib.pyplot as plt
