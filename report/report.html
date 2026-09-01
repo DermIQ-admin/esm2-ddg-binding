@@ -105,10 +105,12 @@
 <div class="lede">
   <p>Fine-tuning ESM-2 to predict the binding cost of a single interface mutation reaches
   <b>Spearman ρ = 0.66</b> when the test set is drawn at the mutation level, and <b>ρ = 0.18</b> when no
-  protein complex is allowed to appear in both training and test. On the honest split, 148M fine-tuned
-  parameters are <b>statistically indistinguishable</b> from a frozen backbone with a 0.49M-parameter
-  head (paired over 5 replicates, <i>p</i> = 0.23). The 3.7× gap between the two split definitions is
-  the result this report is about.</p>
+  protein complex is allowed to appear in both training and test. On that honest split a
+  <b>57-feature substitution-chemistry model with no language model in it</b> is statistically
+  indistinguishable from the fine-tuned network — and its own leaky-to-honest drop is <b>four times
+  smaller</b>, because its features cannot identify which complex they are looking at. Adding one
+  structural annotation beats every ESM-2 variant tried here by a wide margin. The gap between those
+  numbers, and what closes it, is what this report is about.</p>
 </div>
 
 <h2>1. Problem <span class="tag">— and why it is a reasonable proxy for antibody optimization</span></h2>
@@ -257,8 +259,27 @@ contaminated.</p>
       <td>LoRA r=8 on the same backbone</td>
       <td class="dim">1.11M</td><td class="leak-col dim">not run</td><td>0.211 ± 0.080</td><td class="dim">not run</td>
     </tr>
+    <tr><td colspan="5" class="dim" style="padding-top:5pt"><i>— no language model below this line —</i></td></tr>
+    <tr>
+      <td>Substitution chemistry + ridge</td>
+      <td class="dim">57 feat.</td><td class="leak-col">0.330 ± 0.029</td><td>0.192 ± 0.058</td><td>0.244 ± 0.009</td>
+    </tr>
+    <tr>
+      <td>Substitution chemistry + GBM</td>
+      <td class="dim">57 feat.</td><td class="leak-col">0.342 ± 0.028</td><td>0.173 ± 0.050</td><td class="best">0.272 ± 0.031</td>
+    </tr>
+    <tr>
+      <td>…+ interface location <sup>†</sup></td>
+      <td class="dim">62 feat.</td><td class="leak-col">0.483 ± 0.018</td><td class="best">0.389 ± 0.012</td><td class="best">0.478 ± 0.017</td>
+    </tr>
   </tbody>
 </table>
+
+<p class="caption" style="margin-top:0"><sup>†</sup> <b>Not sequence-only.</b>
+<span class="mono">interface_location</span> is SKEMPI's structural annotation of the mutated residue
+(core / support / rim / interior / surface). Every other row uses sequence alone; this one is kept in the
+same table because it answers a question the others cannot, but it is not a like-for-like comparison and
+is never quoted as one.</p>
 
 <p>Zero-shot is a single deterministic, ranking-only run, so it has no error bars — but its flatness is the control
 that matters: <b>the three test sets are of similar intrinsic difficulty</b>, so the gaps across the columns come
@@ -317,6 +338,47 @@ score unchanged (0.211 ± 0.080) but cuts <i>training-seed</i> variance ~5×, sd
 level. It does nothing for variance across <i>which complexes</i> are held out (0.048 → 0.093) — the one that
 limits a generalisation claim.</p>
 
+<h3>A baseline with no language model in it</h3>
+
+<p>Every method above is ESM-2, which leaves the obvious question open: what does a model with no learned
+representation get? The baseline uses 57 features a biochemist would write down in five minutes — BLOSUM62
+score, changes in hydropathy, volume and charge, flags for proline/glycine/alanine, and one-hot residue
+identities. No structure, no evolution, nothing learned. <b>On the honest splits it is not distinguishable
+from ESM-2</b>, paired over the same five partitions: against the frozen probe, <i>p</i> = 0.148 and
+0.987; against the fine-tuned network, <i>p</i> = 0.898 on <span class="mono">split_pdb_id</span> and
+<b>+0.106, <i>p</i> = 0.049 in the chemistry model's favour</b> on the strictest split.</p>
+
+<p><b>It also shows why the naive split flatters ESM-2, rather than asserting it.</b> A model built on
+substitution chemistry cannot tell which complex it is looking at — the features carry no complex identity
+— so it has nothing to memorise. How much each method loses when complexes stop being shared:</p>
+
+<table class="avoid-break">
+  <thead><tr><th style="width:46%">representation</th><th style="width:18%" class="leak-col">leaky</th>
+  <th style="width:18%">honest</th><th style="width:18%">drop</th></tr></thead>
+  <tbody>
+    <tr><td>ESM-2 fine-tune (148.6M)</td><td class="leak-col">0.660</td><td>0.178</td><td class="best">0.482</td></tr>
+    <tr><td>ESM-2 MLP probe (0.49M)</td><td class="leak-col">0.623</td><td>0.223</td><td class="best">0.399</td></tr>
+    <tr><td>ESM-2 ridge</td><td class="leak-col">0.473</td><td>0.053</td><td class="best">0.419</td></tr>
+    <tr><td>Substitution chemistry + GBM</td><td class="leak-col">0.342</td><td>0.173</td><td>0.169</td></tr>
+    <tr><td>Substitution chemistry + ridge</td><td class="leak-col">0.330</td><td>0.192</td><td>0.138</td></tr>
+  </tbody>
+</table>
+
+<p>Every representation that <i>can</i> encode complex identity loses 0.40–0.48. Every representation that
+cannot loses 0.14–0.17. <b>The size of the leakage effect tracks the capacity to memorise</b> — measured
+here rather than inferred, which is the strongest evidence in this report for the claim the whole thing is
+built around.</p>
+
+<p><b>One structural annotation beats all of it.</b> Adding <span class="mono">interface_location</span>
+takes the same model to <b>0.389</b> and <b>0.478</b> on the two honest splits, past every ESM-2 variant by
++0.165 to +0.312, all <i>p</i> ≤ 0.002. That 5-level categorical scores ρ = 0.370 alone. The effect is what
+biophysics predicts, which is the main reason to believe it: mean ΔΔG runs +1.47 (interface core) → +1.21
+(support) → +0.54 (rim) → +0.36 (protein interior) → +0.14 (surface). Two caveats: it is <b>not a
+sequence-only result</b> and is never compared as one — what it establishes is the size of the prize for
+the structural features listed under limitations, which is larger than anything the language model
+contributed; and location is partly confounded with complex identity, since 137 of 316 complexes carry only
+one distinct location value.</p>
+
 <h3>The antibody–antigen subset</h3>
 
 <p>SKEMPI labels antibody–antigen complexes, so this breakdown is free — and it is the subset that matters most
@@ -355,9 +417,10 @@ a confirmed mechanism.</p>
   <li><b>The honest numbers are modest (ρ ≈ 0.17–0.27), and they are the reported result.</b> A correctly
   attributed number on an honest split is worth more than an inflated one; the 0.66 is included to show what a
   split choice is worth.</li>
-  <li><b>Sequence-only</b>, although SKEMPI ships structures, and <b>single-point only</b>, dropping 1,973
-  multi-point rows, so nothing here speaks to epistasis. No comparison against FoldX-style physics-based
-  methods on their own terms is attempted.</li>
+  <li><b>Sequence-only</b> — and the cost is now measured, not assumed: one structural annotation more than
+  doubles the chemistry baseline's honest-split score, past every ESM-2 variant here. Also <b>single-point
+  only</b>, dropping 1,973 multi-point rows, so nothing here speaks to epistasis. No comparison against
+  FoldX-style physics on its own terms is attempted.</li>
   <li><b>Mean-pooling discards position</b> — a whole-sequence mean is a weak signal for a change of one residue
   in up to 2,048, plausibly the largest architectural limitation here. Separately, <b>127 inequality rows are
   dropped rather than used</b> (censored regression would use them properly), and val/test hold smaller,
@@ -368,19 +431,24 @@ a confirmed mechanism.</p>
   trains against a real label — silent rather than loud.</li>
 </ul>
 
-<h2>6. Next steps <span class="tag">— the model overfits and is unstable, so the goal is to cut variance, not only to raise the mean</span></h2>
+<h2>6. Next steps <span class="tag">— reordered by what the chemistry baseline showed</span></h2>
 
 <ul>
+  <li><b>Real structural features</b> from the PDBs rather than SKEMPI's annotation — relative solvent
+  accessibility, interface contact counts, burial on complexation. The coarse 5-level proxy already beats every
+  language model here, so the continuous versions are the obvious next measurement, and they would resolve the
+  location/complex confound.</li>
+  <li><b>Combine chemistry with the embeddings.</b> Indistinguishable on the honest splits does not mean they
+  carry the same information; one cheap fit tests whether the errors are correlated.</li>
   <li><b>Position-specific pooling at the mutated residue,</b> concatenated with the mean-pooled context; the
-  dataset already carries the token index for it. Targets the limitation the honest splits expose most directly,
-  and is the highest-value single change.</li>
+  dataset already carries the token index. Lower priority than it was — the chemistry baseline suggests the
+  ceiling may not be a pooling problem.</li>
   <li><b>Attack split-seed variance, which LoRA did not.</b> LoRA fixed the training-seed kind and left this one
   untouched, and it is the kind that limits a generalisation claim. Layer-selective fine-tuning is the concrete
   candidate — AbTune reports 50–75% of layers beating full depth. LoRA also now unblocks 650M.</li>
   <li><b>Diagnose the antibody-subset inversion</b> before trusting any antibody number: is CDR sequence
   variability being read as noise, or are the loops simply out of distribution for a general protein language
-  model? Then, and only then, structural features — relative solvent accessibility and interface contact counts
-  are cheap given SKEMPI's structures, and would test whether the ceiling is the representation or the task.</li>
+  model?</li>
 </ul>
 
 <div class="flag">

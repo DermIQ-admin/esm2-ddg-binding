@@ -4,13 +4,17 @@ Fine-tuning ESM-2 to predict the change in protein–protein binding free energy
 single interface mutation, evaluated on SKEMPI 2.0 — and measuring how much of the apparent
 performance is leakage.
 
-**Headline:** on a split that lets the model memorise complexes, fine-tuning scores Spearman
-**0.66**. On an honest complex-level split, the same model scores **0.18**, and a frozen
-backbone with a 0.49M-parameter head does at least as well. On antibody–antigen complexes
-specifically, fine-tuning is **reliably worse than that frozen probe** (paired over 5
-replicates, p = 0.012).
+**Headline:** on a split that lets the model memorise complexes, fine-tuning ESM-2 scores
+Spearman **0.66**. On an honest complex-level split, the same model scores **0.18** — and a
+**57-feature substitution-chemistry model with no language model in it at all** is
+statistically indistinguishable from it there. That baseline's own leaky-to-honest drop is
+**four times smaller**, because its features cannot identify which complex they are looking at.
+Adding one structural annotation — whether the residue sits in the interface core or on the
+surface — beats every ESM-2 variant tried here by a wide margin.
 
-A three-page summary of the whole project is in
+The gap between those numbers, and what closes it, is what this repo is about.
+
+A summary of the whole project is in
 [`report/esm2-skempi-report.pdf`](report/esm2-skempi-report.pdf).
 
 ## Motivation
@@ -62,14 +66,18 @@ and those are real measurements, not noise.
 Pooling is mask-aware mean-pooling; position-specific pooling at the mutated residue is a
 deliberate v2 (`dataset.py` already emits `mutation_token_index` for it).
 
-**Two baselines exist so that the fine-tuned model cannot fail silently:**
+**Three baselines exist so that the fine-tuned model cannot fail silently:**
 
 1. **Zero-shot masked-marginal** — no training at all. Establishes the floor.
 2. **Frozen embeddings + head** — backbone frozen, only a small head trained. Establishes what
    the pretrained representation already knows.
+3. **Substitution chemistry** — 57 hand-written features, no language model anywhere. Establishes
+   what the *representation itself* is worth, by answering what you get without one.
 
 Build order was zero-shot → frozen probe → fine-tune, each one insurance against the next
-silently breaking.
+silently breaking. The chemistry baseline was added last, after the fine-tuned results were in,
+which is the wrong order: it should have been built first, because it turned out to change how
+every other number reads.
 
 **Training setup.** Full fine-tune of `facebook/esm2_t30_150M_UR50D` (148.6M trainable
 parameters, of which the head is 0.49M); AdamW at lr 2×10⁻⁵; bf16 autocast with no GradScaler,
@@ -116,6 +124,15 @@ rank order matters more than calibration for screening.
 | Frozen embeddings + MLP | 0.623 ± 0.024 | **0.223 ± 0.020** | **0.272 ± 0.053** |
 | Fine-tuned ESM-2 150M | **0.660 ± 0.021** | 0.178 ± 0.059 | 0.167 ± 0.091 |
 | LoRA r=8 (1.11M trainable) | not run | 0.211 ± 0.080 | not run |
+| *— no language model below this line —* | | | |
+| Substitution chemistry + ridge | 0.330 ± 0.029 | 0.192 ± 0.058 | 0.244 ± 0.009 |
+| Substitution chemistry + GBM | 0.342 ± 0.028 | 0.173 ± 0.050 | **0.272 ± 0.031** |
+| …+ interface location <sup>†</sup> | 0.483 ± 0.018 | **0.389 ± 0.012** | **0.478 ± 0.017** |
+
+<sup>†</sup> **Not sequence-only.** `interface_location` is SKEMPI's structural annotation of the
+mutated residue (core / support / rim / interior / surface). Every other row in this table uses
+sequence alone. Kept in the same table because it answers a question the others cannot, but it
+is not a like-for-like comparison and is never quoted as one.
 
 ![Test Spearman by method under each split definition; bars are the mean of 5 replicates, whiskers ±1 sd](report/figures/fig2_gradient.png)
 
@@ -150,6 +167,63 @@ is indistinguishable from learning ΔΔG. On `split_pdb_id` the best epoch is er
 **three of five replicates peak at epoch 0**: the model is at its best before it has learned
 anything transferable from the training complexes at all. Same model, same hyperparameters, same
 data — the only variable is whether the split rewards memorising a complex.
+
+### A baseline with no language model in it
+
+Every method above is ESM-2, which leaves the obvious question unanswered: what does a model
+with no learned representation get? `src/baselines/biophysical.py` uses 57 features a biochemist
+would write down in five minutes — BLOSUM62 score, changes in hydropathy, volume and charge,
+flags for proline/glycine/alanine, and one-hot identities of the wild-type and mutant residue.
+No structure, no evolution, nothing learned.
+
+**On the honest splits it is not distinguishable from ESM-2.** Paired over the same five
+partitions:
+
+| sequence-only, like-for-like | `split_pdb_id` | `split_hold_out_proteins` |
+|---|---|---|
+| chemistry GBM − ESM-2 MLP probe | −0.050, p = 0.148 | +0.001, p = 0.987 |
+| chemistry GBM − ESM-2 fine-tune | −0.005, p = 0.898 | **+0.106, p = 0.049** |
+
+On the strictest split the chemistry model is *better* than the fine-tuned 148M-parameter
+network. Everywhere else the two are indistinguishable.
+
+**And it shows why the naive split flatters ESM-2, rather than just asserting it.** A model built
+on substitution chemistry cannot tell which complex it is looking at — the features contain no
+complex identity — so it has nothing to memorise. Compare how much each method loses when
+complexes stop being shared between train and test:
+
+| | leaky | honest | drop |
+|---|---|---|---|
+| ESM-2 fine-tune (148.6M) | 0.660 | 0.178 | **0.482** |
+| ESM-2 MLP probe (0.49M) | 0.623 | 0.223 | **0.399** |
+| ESM-2 ridge | 0.473 | 0.053 | **0.419** |
+| Chemistry + GBM | 0.342 | 0.173 | **0.169** |
+| Chemistry + ridge | 0.330 | 0.192 | **0.138** |
+
+Every representation that *can* encode complex identity loses 0.40–0.48. Every representation
+that cannot loses 0.14–0.17. The size of the leakage effect tracks the capacity to memorise,
+which is the mechanism the rest of this section argues for — here measured rather than inferred.
+
+**One structural annotation beats all of it.** Adding SKEMPI's `interface_location` — is the
+mutated residue in the interface core, support, rim, protein interior, or surface — takes the
+same model to **0.389** on `split_pdb_id` and **0.478** on `split_hold_out_proteins`, beating
+every ESM-2 variant by +0.165 to +0.312, all p ≤ 0.002. That single 5-level categorical scores
+ρ = 0.370 on its own, above every ESM-2 honest-split number in this repo.
+
+The effect is what biophysics predicts, which is the main reason to believe it: mean ΔΔG runs
++1.47 (core) → +1.21 (support) → +0.54 (rim) → +0.36 (interior) → +0.14 (surface). Burying a
+residue at the interface costs binding energy; mutating one on the far surface does not.
+
+Two caveats, and they matter:
+
+- **This is not a sequence-only result** and is never compared as one. `interface_location` comes
+  from the structure. What it establishes is the *size of the prize* for the structural features
+  the limitations section lists as missing — which turns out to be larger than anything the
+  language model contributed.
+- **Location and complex identity are partly confounded**: 137 of 316 complexes carry only one
+  distinct location value. A 5-level categorical cannot memorise 313 complexes, and the effect is
+  monotone and biophysically correct, so this is signal rather than leakage — but the confound is
+  real and the number should not be read as purely a residue-level effect.
 
 **Why the zero-shot floor is a floor.** Scoring the mutated chain *alone* and scoring it inside
 the full concatenated complex agree at ρ = **0.888** — deleting the entire binding partner barely
@@ -233,9 +307,11 @@ Three caveats, stated rather than buried:
 
 ## Limitations
 
-- **Sequence-only.** No structural features, despite SKEMPI shipping structures. A
-  structure-aware model should beat this, and comparing against FoldX-style methods on their own
-  terms is not possible here.
+- **Sequence-only** — and the cost is now measured, not assumed. Adding a single structural
+  annotation (`interface_location`) to the chemistry baseline more than doubles its honest-split
+  score, to 0.389 / 0.478, well past every ESM-2 variant here. Structure is worth more on this
+  task than the language model is. Comparing against FoldX-style physics on its own terms is
+  still not possible here.
 - **Single-point mutations only.** 1,973 multi-point rows are dropped. ΔΔG is not additive across
   mutations in general, so the model says nothing about epistasis.
 - **The honest numbers are modest** — Spearman ~0.18–0.27. This repo reports them because a
@@ -263,22 +339,28 @@ Three caveats, stated rather than buried:
 
 ## Next steps
 
-Ordered by expected value. The results above diagnose overfitting and instability, so the goal is
-to cut variance, not only to raise the mean:
+Ordered by expected value. The chemistry baseline reframes this list: the honest-split gap is
+not obviously a modelling problem, since a 57-feature model already matches ESM-2 there, while
+one structural feature beats everything. Structure moved to the top for that reason.
 
-1. **Position-specific pooling at the mutated residue**, concatenated with the mean-pooled
-   context. `dataset.py` already carries the token index. Targets the limitation the honest
-   splits expose most directly.
-2. **LoRA on the 150M backbone as regularisation** — a small adapter should shrink the replicate
-   spread that makes single runs unreportable, and it doubles as the prerequisite for 650M, which
-   does not fit on a 24 GB card under full fine-tuning. Alongside it, a lower learning rate or
-   freezing the lower N layers, aimed at the epoch-0 peak on the strictest split.
-3. **Diagnose the antibody-subset inversion** before trusting any antibody number: is CDR
+1. **Real structural features**, computed from the PDBs rather than taken from SKEMPI's
+   annotation: relative solvent accessibility, interface contact counts, burial on complexation.
+   `interface_location` is a coarse 5-level proxy and it already beats every language model here,
+   so the continuous versions are the obvious next measurement — and they would resolve the
+   location/complex confound noted above.
+2. **Combine chemistry with the embeddings.** They are indistinguishable on the honest splits,
+   but that does not mean they carry the *same* information. Concatenating the 57 features with
+   the frozen embedding is one cheap fit and tests whether the errors are correlated.
+3. **Attack split-seed variance, which LoRA did not.** LoRA cut training-seed variance ~5× and
+   left sensitivity to *which complexes* are held out untouched — and that is the kind that
+   limits a generalisation claim. Layer-selective fine-tuning is the concrete candidate; AbTune
+   reports 50–75% of layers beating full depth. LoRA also now unblocks 650M.
+4. **Position-specific pooling at the mutated residue**, concatenated with the mean-pooled
+   context. `dataset.py` already carries the token index. Lower priority than it was: the
+   chemistry baseline suggests the ceiling here may not be a pooling problem.
+5. **Diagnose the antibody-subset inversion** before trusting any antibody number: is CDR
    sequence variability being read as noise, or are the loops out of distribution for a general
    protein language model?
-4. **Structural features** — relative solvent accessibility and interface contact counts are
-   cheap given SKEMPI's structures, and would test whether the ceiling here is the representation
-   or the task.
 
 ## Decisions
 
@@ -331,6 +413,7 @@ Baselines:
 python -m src.baselines.zero_shot --backbone facebook/esm2_t30_150M_UR50D
 python -m src.baselines.zero_shot --backbone facebook/esm2_t30_150M_UR50D --context chain
 python -m src.baselines.linear_probe --backbone facebook/esm2_t30_150M_UR50D
+python -m src.baselines.biophysical                 # no GPU, no embeddings, ~1 min
 ```
 
 Fine-tuning — **one model per split definition**, because the three definitions disagree about

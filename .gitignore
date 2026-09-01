@@ -68,3 +68,10 @@ logs/
 
 # Scratch results from convergence probes; the real runs live in results/
 results_probe/
+
+# --- DECISIONS.md working draft ---------------------------------------------
+# DECISIONS.md's reasoning is Johannes's to write. DECISIONS.draft.md is a
+# thinking aid to react to, in neutral third person so it cannot be shipped
+# as-is. It must never be committed: an AI-drafted decisions log was already
+# purged from this repo's history once, for exactly that reason.
+DECISIONS.draft.md
