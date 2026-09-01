@@ -288,6 +288,15 @@ python -u -m src.train --split-column split_hold_out_proteins
 python -u -m src.train --split-column split_mutation
 ```
 
+Low-rank adapters instead of full fine-tuning — 1.11M trainable parameters rather than
+148.6M. Note the learning rate is not inherited: LoRA initialises its B matrix to zero, so the
+adapters start as an exact no-op and need a rate about an order of magnitude higher to move at
+all. `--lora` therefore defaults to 2e-4 rather than the config's 2e-5, and prints which it used.
+
+```powershell
+python -u -m src.train --split-column split_pdb_id --lora
+```
+
 Use `python -u`. Piping buffers stdout and short epoch lines never fill the buffer, which makes a
 long run completely unobservable.
 
@@ -296,8 +305,14 @@ Replicates and the aggregate tables:
 ```powershell
 python -m src.data.splits --random-state 43     # writes splits_seed43.csv
 python -m src.data.splits --random-state 44
+
+# Two variance sources, measured separately. --seed varies training
+# stochasticity at a fixed partition; --splits-file re-partitions the
+# complexes at a fixed training seed. Split variance exceeds training
+# variance on most cells, which is why both are run.
 python -m src.train --split-column split_pdb_id --seed 43
-python -m src.train --split-column split_pdb_id --splits-file data/processed/splits_seed43.csv
+python -m src.train --split-column split_pdb_id --splits-file splits_seed43.csv
+
 python -m src.replicates                         # every table in this README
 ```
 
