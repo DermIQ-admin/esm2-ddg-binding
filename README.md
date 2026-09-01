@@ -511,18 +511,34 @@ not a meaningful exercise, which is the argument this repo exists to make concre
 
 ## Data and attribution
 
-Affinity measurements and the curated `hold_out_proteins` / `hold_out_type` groupings are from
-**SKEMPI 2.0**, and the derived values in `data/processed/` (`kd_wt_m`, `kd_mut_m`, `ddg`) are
-computed from them:
+`data/processed/` contains **adapted material derived from SKEMPI 2.0**, which is licensed
+**[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)**. That licence permits
+redistribution of the data and of adapted versions, with attribution. Attribution is given here,
+and the modifications are stated below as the licence requires.
 
 > Jankauskaitė J., Jiménez-García B., Dapkūnas J., Fernández-Recio J., Moal I.H. (2019).
 > SKEMPI 2.0: an updated benchmark of changes in protein–protein binding energy, kinetics and
 > thermodynamics upon mutation. *Bioinformatics* 35(3):462–469.
-> <https://life.bsc.es/pid/skempi2/>
+> <https://life.bsc.es/pid/skempi2/> — licensed under
+> [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
-`data/raw/` is not committed — `src/data/download.py` fetches it. Model weights are
-[`facebook/esm2_t30_150M_UR50D`](https://huggingface.co/facebook/esm2_t30_150M_UR50D).
+**Modifications made to the SKEMPI material**, per the licence's "indicate if changes were made":
+
+- Filtered to single-point mutations with non-inequality affinities at both wild-type and mutant
+  (7,085 records → 4,829; see the filter chain in `src/data/parse_skempi.py`).
+- ΔΔG computed from the raw `Affinity_* (M)` columns as RT·ln(K<sub>d,mut</sub>/K<sub>d,wt</sub>),
+  and affinities carried through as `kd_wt_m` / `kd_mut_m`.
+- Per-complex sequences reconstructed from the `.mapping` files SKEMPI ships with each structure.
+- SKEMPI's `Hold_out_proteins`, `Hold_out_type` and `iMutation_Location(s)` columns carried
+  through unchanged as `hold_out_proteins`, `hold_out_type` and `interface_location`.
+- Train/validation/test assignments added; these are ours, not SKEMPI's.
+
+`data/raw/` is not committed — `src/data/download.py` fetches it from the source above. Model
+weights are [`facebook/esm2_t30_150M_UR50D`](https://huggingface.co/facebook/esm2_t30_150M_UR50D).
 
 ## License
 
-MIT — see [LICENSE](LICENSE). Covers the code in this repository, not the SKEMPI data.
+**Code:** MIT — see [LICENSE](LICENSE).
+**Data in `data/processed/`:** CC BY 4.0, inherited from SKEMPI 2.0 as adapted material. The MIT
+licence does not apply to it, and it may be redistributed under CC BY 4.0's terms with the
+attribution given above.

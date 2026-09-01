@@ -69,9 +69,10 @@ logs/
 # Scratch results from convergence probes; the real runs live in results/
 results_probe/
 
-# --- DECISIONS.md working draft ---------------------------------------------
-# DECISIONS.md's reasoning is Johannes's to write. DECISIONS.draft.md is a
-# thinking aid to react to, in neutral third person so it cannot be shipped
-# as-is. It must never be committed: an AI-drafted decisions log was already
-# purged from this repo's history once, for exactly that reason.
-DECISIONS.draft.md
+# --- Working drafts, never committed ----------------------------------------
+# Anything *.draft.md is a private thinking aid: DECISIONS.draft.md (reasoning
+# to react to, in neutral third person) and PROJECT-BRIEF.draft.md (the full
+# write-up plus interview practice). An AI-drafted decisions log was already
+# purged from this repo's history once; the glob is the guard so a new draft is
+# protected the moment it is created, without anyone remembering to add it.
+*.draft.md
