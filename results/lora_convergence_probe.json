@@ -1,0 +1,232 @@
+{
+ "note": "30-epoch LoRA convergence probe on the split42/seed42 partition of split_pdb_id, patience disabled. Diagnostic only -- NOT a replicate, and deliberately named so replicates.load_runs() ignores it. Answers whether the 10-epoch budget was truncating LoRA unfairly. It was not: validation Spearman kept improving (0.393 at epoch 9 -> 0.404 at epoch 25) while test Spearman FELL from 0.137 to 0.054 on the identical partition.",
+ "config": {
+  "epochs": 30,
+  "patience": "disabled",
+  "lr": 0.0002,
+  "lora_r": 8,
+  "split": "split_pdb_id",
+  "partition": "split42",
+  "training_seed": 42
+ },
+ "best_epoch": 25,
+ "best_val_spearman": 0.4040319991460064,
+ "test_spearman": 0.05413131656378476,
+ "comparison_10_epoch_same_partition": {
+  "best_epoch": 9,
+  "best_val_spearman": 0.3931,
+  "test_spearman": 0.1367
+ },
+ "history": [
+  {
+   "epoch": 0,
+   "train_loss": 0.756864093689725,
+   "val_loss": 0.7414956813331308,
+   "val_spearman": 0.07943447381455801,
+   "seconds": 186.0
+  },
+  {
+   "epoch": 1,
+   "train_loss": 0.6473785024996825,
+   "val_loss": 0.7273023298768134,
+   "val_spearman": 0.22363302187465361,
+   "seconds": 184.2
+  },
+  {
+   "epoch": 2,
+   "train_loss": 0.5551925427920754,
+   "val_loss": 0.7101997920241335,
+   "val_spearman": 0.2549510515610002,
+   "seconds": 185.8
+  },
+  {
+   "epoch": 3,
+   "train_loss": 0.4867710043037466,
+   "val_loss": 0.7084015768753558,
+   "val_spearman": 0.2607030656204505,
+   "seconds": 186.9
+  },
+  {
+   "epoch": 4,
+   "train_loss": 0.44878687172969134,
+   "val_loss": 0.6616627789507138,
+   "val_spearman": 0.2934713253388694,
+   "seconds": 186.3
+  },
+  {
+   "epoch": 5,
+   "train_loss": 0.4144886833812686,
+   "val_loss": 0.6677128895680452,
+   "val_spearman": 0.2881173458042315,
+   "seconds": 185.7
+  },
+  {
+   "epoch": 6,
+   "train_loss": 0.37900755147694787,
+   "val_loss": 0.6418735942674865,
+   "val_spearman": 0.32978925321722496,
+   "seconds": 146.7
+  },
+  {
+   "epoch": 7,
+   "train_loss": 0.3420250130512006,
+   "val_loss": 0.6431417703024787,
+   "val_spearman": 0.3052667512332281,
+   "seconds": 196.4
+  },
+  {
+   "epoch": 8,
+   "train_loss": 0.30818922739949633,
+   "val_loss": 0.6389004883587617,
+   "val_spearman": 0.30219605125579585,
+   "seconds": 193.7
+  },
+  {
+   "epoch": 9,
+   "train_loss": 0.2832864506888382,
+   "val_loss": 0.6239388987627523,
+   "val_spearman": 0.3473247609077445,
+   "seconds": 187.6
+  },
+  {
+   "epoch": 10,
+   "train_loss": 0.2510368165113728,
+   "val_loss": 0.6407728803448444,
+   "val_spearman": 0.3362378572877969,
+   "seconds": 187.2
+  },
+  {
+   "epoch": 11,
+   "train_loss": 0.2278674864472416,
+   "val_loss": 0.6319821973376233,
+   "val_spearman": 0.34731761885970003,
+   "seconds": 184.7
+  },
+  {
+   "epoch": 12,
+   "train_loss": 0.22643738764183066,
+   "val_loss": 0.6680213606858562,
+   "val_spearman": 0.32582611686709795,
+   "seconds": 196.2
+  },
+  {
+   "epoch": 13,
+   "train_loss": 0.2047431948906662,
+   "val_loss": 0.6407396274779378,
+   "val_spearman": 0.3166167489189917,
+   "seconds": 196.2
+  },
+  {
+   "epoch": 14,
+   "train_loss": 0.1904162091280874,
+   "val_loss": 0.6127495545161695,
+   "val_spearman": 0.3699991189696738,
+   "seconds": 198.0
+  },
+  {
+   "epoch": 15,
+   "train_loss": 0.17827128606893136,
+   "val_loss": 0.6197399897655023,
+   "val_spearman": 0.35470786467338966,
+   "seconds": 202.2
+  },
+  {
+   "epoch": 16,
+   "train_loss": 0.1694253997244581,
+   "val_loss": 0.6207731151272511,
+   "val_spearman": 0.3453522100542267,
+   "seconds": 214.4
+  },
+  {
+   "epoch": 17,
+   "train_loss": 0.15638932970425068,
+   "val_loss": 0.6121387063120973,
+   "val_spearman": 0.34806745501750336,
+   "seconds": 208.7
+  },
+  {
+   "epoch": 18,
+   "train_loss": 0.1537133548338359,
+   "val_loss": 0.6260410236181884,
+   "val_spearman": 0.34842580994331795,
+   "seconds": 199.3
+  },
+  {
+   "epoch": 19,
+   "train_loss": 0.14403166698721676,
+   "val_loss": 0.6188870063064427,
+   "val_spearman": 0.3554154791840861,
+   "seconds": 199.0
+  },
+  {
+   "epoch": 20,
+   "train_loss": 0.14481217708969232,
+   "val_loss": 0.6186681554158187,
+   "val_spearman": 0.36598908457821633,
+   "seconds": 200.3
+  },
+  {
+   "epoch": 21,
+   "train_loss": 0.13370669109784905,
+   "val_loss": 0.6264795641549702,
+   "val_spearman": 0.35485130138971477,
+   "seconds": 192.8
+  },
+  {
+   "epoch": 22,
+   "train_loss": 0.12990078666742141,
+   "val_loss": 0.6065140275798481,
+   "val_spearman": 0.39297361135422293,
+   "seconds": 198.8
+  },
+  {
+   "epoch": 23,
+   "train_loss": 0.12880756222006295,
+   "val_loss": 0.6251951295355784,
+   "val_spearman": 0.3561542275976462,
+   "seconds": 197.9
+  },
+  {
+   "epoch": 24,
+   "train_loss": 0.12551155998805597,
+   "val_loss": 0.586973392955702,
+   "val_spearman": 0.4000416055265426,
+   "seconds": 200.5
+  },
+  {
+   "epoch": 25,
+   "train_loss": 0.11608320366207259,
+   "val_loss": 0.6161043858345084,
+   "val_spearman": 0.4040319991460064,
+   "seconds": 183.3
+  },
+  {
+   "epoch": 26,
+   "train_loss": 0.11005234649929616,
+   "val_loss": 0.6092615385109494,
+   "val_spearman": 0.3719806259373778,
+   "seconds": 195.3
+  },
+  {
+   "epoch": 27,
+   "train_loss": 0.11079251830029689,
+   "val_loss": 0.5975671439977556,
+   "val_spearman": 0.395827507059375,
+   "seconds": 200.0
+  },
+  {
+   "epoch": 28,
+   "train_loss": 0.10927410516380699,
+   "val_loss": 0.6060055856136927,
+   "val_spearman": 0.34437092661983043,
+   "seconds": 197.8
+  },
+  {
+   "epoch": 29,
+   "train_loss": 0.10300204697735531,
+   "val_loss": 0.6114401976166871,
+   "val_spearman": 0.36279081517954587,
+   "seconds": 196.0
+  }
+ ]
+}
