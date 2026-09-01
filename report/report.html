@@ -68,7 +68,7 @@
   figure { margin: 5pt 0 5pt; page-break-inside: avoid; text-align: center; }
   figure img { display: block; margin: 0 auto; }
   #fig1 img { width: 67%; }
-  #fig2 img { width: 86%; }
+  #fig2 img { width: 79%; }
   .caption { font-size: 7.4pt; color: var(--muted); line-height: 1.36; margin-top: 3pt; text-align: left; }
   .caption b { color: var(--ink-3); font-weight: 650; }
 
@@ -198,19 +198,19 @@ of the interface at once.</p>
     <dt>Batching</dt><dd>By <b>token budget</b> — 4,096 padded tokens, not a fixed example count</dd>
     <dt>Epochs / selection</dt><dd>≤10, early stopping patience 3; best <b>validation Spearman</b>, not val loss</dd>
     <dt>Hardware</dt><dd>1× RTX 4090 24 GB, Windows 11, PyTorch 2.13 / CUDA 13.0</dd>
-    <dt>Wall clock</dt><dd><b>179 s/epoch, ≈25 min per run</b>; 6.2 GPU-hours for all 15 replicate runs</dd>
+    <dt>Wall clock</dt><dd><b>181 s/epoch, ≈26 min per run</b>; 8.5 GPU-hours for all 20 replicate runs</dd>
     <dt>Replicates</dt><dd>5 per method per split — 3 training seeds at fixed partition, 3 split seeds at fixed training seed</dd>
   </dl>
 </div>
 
-<p><b>Full fine-tuning rather than LoRA, and 150M rather than 650M — both measured, not assumed.</b> 150M full
-peaks at 10.9 GB; 650M needs 26.9 GB on a 24 GB card even with gradient checkpointing, because the siamese
-design calls the backbone twice per step, and runs <b>33× slower</b> once traffic spills to host memory —
-silently, since CUDA on Windows falls back to shared system memory rather than raising
-<span class="mono">OutOfMemoryError</span>. Two baselines keep the fine-tuned model from failing silently:
-zero-shot masked-marginal scoring fixes the floor, a frozen backbone with a trained head measures what the
-pretrained representation already knows. And because the three split definitions disagree about which rows are
-held out, <b>a separate model is trained per definition</b>, with the harness marking the other two contaminated.</p>
+<p><b>150M rather than 650M — measured, not assumed.</b> 150M peaks at 10.9 GB; 650M needs 26.9 GB on a 24 GB
+card even with gradient checkpointing, because the siamese design calls the backbone twice per step, and runs
+<b>33× slower</b> once traffic spills to host memory — silently, since CUDA on Windows falls back to shared
+system memory rather than raising <span class="mono">OutOfMemoryError</span>. Two baselines keep the fine-tuned
+model from failing silently: zero-shot masked-marginal fixes the floor, a frozen backbone with a trained head
+measures what the representation already knows. And because the three split definitions disagree about which
+rows are held out, <b>a separate model is trained per definition</b>, the harness marking the other two
+contaminated.</p>
 
 <figure id="fig1">
   <img src="figures/fig1_scatter.png" alt="Predicted versus measured ΔΔG for three model and split combinations">
@@ -253,21 +253,27 @@ held out, <b>a separate model is trained per definition</b>, with the harness ma
       <td><b>Fine-tuned ESM-2 150M</b></td>
       <td class="dim">148.6M</td><td class="leak-col best">0.660 ± 0.021</td><td>0.178 ± 0.059</td><td>0.167 ± 0.091</td>
     </tr>
+    <tr>
+      <td>LoRA r=8 on the same backbone</td>
+      <td class="dim">1.11M</td><td class="leak-col dim">not run</td><td>0.211 ± 0.080</td><td class="dim">not run</td>
+    </tr>
   </tbody>
 </table>
 
 <p>Zero-shot is a single deterministic, ranking-only run, so it has no error bars — but its flatness is the control
 that matters: <b>the three test sets are of similar intrinsic difficulty</b>, so the gaps across the columns come
-from training, not from one split being easier. That floor is explained rather than merely reported: scoring the
-mutated chain <i>alone</i> and inside the full complex agree at ρ = 0.888, so ESM-2's masked-marginal is blind to
-the binding partner — it scores whether a residue belongs in its chain, not whether it holds an interface together.</p>
+from training, not from one split being easier. That floor is explained, not merely reported: scoring the mutated
+chain <i>alone</i> and inside the full complex agree at ρ = 0.888 — the masked-marginal is blind to the binding
+partner, scoring whether a residue belongs in its chain rather than whether it holds an interface together.</p>
 
 <figure id="fig2">
   <img src="figures/fig2_gradient.png" alt="Test Spearman by method and split definition, with replicate error bars">
   <div class="caption">
     <b>Figure 2 — the leakage gradient.</b> Test Spearman by method under each split definition; bars are the
     mean of 5 replicates, whiskers ±1 sd. Note the <i>within-group</i> order too: on the leaky split more
-    trainable parameters help monotonically; on both honest splits that ordering disappears.
+    trainable parameters help monotonically; on both honest splits that ordering disappears. LoRA is absent from
+    this figure by design — it was run on <span class="mono">split_pdb_id</span> only, so it has no bars to place
+    in the other two groups.
   </div>
 </figure>
 
@@ -298,16 +304,18 @@ is the one that rewards memorisation.</b> The training curves say why, across al
 in one illustrative run. Under the naive split, validation holds other mutations of complexes already in
 training, so the best epoch is the <b>last</b> one in all five runs (val ρ 0.17–0.35 at epoch 0 rising to
 0.62–0.68 at epoch 9) — it never signals a stop. Under <span class="mono">split_pdb_id</span> the best epoch is
-erratic: 3, 3, 7, 9, 9. Under the strictest split, <b>three of five replicates peak at epoch 0</b>, before the
-model has learned anything transferable from the training complexes at all. Same model, same hyperparameters,
-same data — the only variable is whether the split rewards memorising a complex. The diagnosis is ordinary
-overfitting, not a bug: 148M parameters against 3,374 training rows from 121 complexes, ending at train
-ρ = 0.87 against test ρ = 0.22.</p>
+erratic (3, 3, 7, 9, 9); under the strictest split <b>three of five replicates peak at epoch 0</b>, before the
+model has learned anything transferable at all. The diagnosis is ordinary overfitting, not a bug: 148M
+parameters against 3,374 training rows from 121 complexes, ending at train ρ = 0.87 against test ρ = 0.22.</p>
 
 <p><b>A second finding worth as much as the first: fine-tuning is 2–4× more variable than the probe</b>
 (sd 0.048–0.113 vs 0.016–0.063), and fixing the random seed does not remove it — the identical configuration
 produced 0.148 and 0.225 on two different days, from CUDA kernel nondeterminism alone. A single fine-tuning
-run of this model is not a reportable number, which is why everything above is a 5-replicate mean.</p>
+run of this model is not a reportable number, which is why everything above is a 5-replicate mean.
+<b>LoRA was run against exactly this.</b> Training 1.11M parameters rather than 148.6M leaves the honest-split
+score unchanged (0.211 ± 0.080) but cuts <i>training-seed</i> variance ~5×, sd 0.074 → 0.014, the frozen probe's
+level. It does nothing for variance across <i>which complexes</i> are held out (0.048 → 0.093) — the one that
+limits a generalisation claim.</p>
 
 <h3>The antibody–antigen subset</h3>
 
@@ -333,11 +341,13 @@ than a subgroup found by searching.</p>
 </table>
 
 <p>Across all test rows, fine-tuning and the frozen probe are indistinguishable. <b>On antibody complexes they
-are not: fine-tuning is reliably worse, and its Spearman is below zero</b> — the ranking is anti-correlated
-with measured ΔΔG, in all five replicate pairs. Two caveats belong with it: the strictest split holds only 6 AB/AG
-test rows against a 10-row minimum, so the harness omits the metric there and the claim rests on
-<span class="mono">split_pdb_id</span> alone; and it is one subgroup among several in the error analysis — a
-pre-registered signal, not a confirmed mechanism.</p>
+are not: fine-tuning is reliably worse</b>, by −0.330 (95% CI [−0.540, −0.119], p = 0.012), with the paired
+difference negative in all five replicates. Note what is <i>not</i> claimed: its own AB/AG correlation averages
+−0.065, but two of five replicates are positive and that mean is not distinguishable from zero (p = 0.362) — the
+replicates support the comparison, not the sign. Two further caveats: the strictest split holds only 6 AB/AG test
+rows against a 10-row minimum, so the metric is omitted there and the claim rests on
+<span class="mono">split_pdb_id</span> alone; and it is one subgroup among several — a pre-registered signal, not
+a confirmed mechanism.</p>
 
 <h2>5. Limitations</h2>
 
@@ -352,10 +362,10 @@ pre-registered signal, not a confirmed mechanism.</p>
   in up to 2,048, plausibly the largest architectural limitation here. Separately, <b>127 inequality rows are
   dropped rather than used</b> (censored regression would use them properly), and val/test hold smaller,
   less-studied complexes as a side effect of size-aware assignment (§2).</li>
-  <li><b>Rows between 1,024 and 2,048 tokens (1.6%) exceed ESM-2's pretraining crop;</b> rotary embeddings
-  extrapolate, but quality there is not guaranteed. Truncation was rejected because at a 1,024 cap the mutation
-  site falls outside the window for 77 rows, making <span class="mono">mut − wt</span> exactly zero while the
-  model still trains against a real label — a silent failure rather than a loud one.</li>
+  <li><b>Rows between 1,024 and 2,048 tokens (1.6%) exceed ESM-2's pretraining crop</b> and rotary embeddings
+  extrapolate there without guarantee. Truncation was rejected because at a 1,024 cap the mutation site falls
+  outside the window for 77 rows, making <span class="mono">mut − wt</span> exactly zero while the model still
+  trains against a real label — silent rather than loud.</li>
 </ul>
 
 <h2>6. Next steps <span class="tag">— the model overfits and is unstable, so the goal is to cut variance, not only to raise the mean</span></h2>
@@ -364,10 +374,9 @@ pre-registered signal, not a confirmed mechanism.</p>
   <li><b>Position-specific pooling at the mutated residue,</b> concatenated with the mean-pooled context; the
   dataset already carries the token index for it. Targets the limitation the honest splits expose most directly,
   and is the highest-value single change.</li>
-  <li><b>LoRA on the 150M backbone as regularisation</b> — a small adapter should shrink the replicate spread that
-  makes single runs unreportable, and it doubles as the prerequisite for 650M, which does not fit on this card
-  under full fine-tuning. Alongside it, a lower learning rate or freezing the lower N layers, aimed at the epoch-0
-  peak on the strictest split.</li>
+  <li><b>Attack split-seed variance, which LoRA did not.</b> LoRA fixed the training-seed kind and left this one
+  untouched, and it is the kind that limits a generalisation claim. Layer-selective fine-tuning is the concrete
+  candidate — AbTune reports 50–75% of layers beating full depth. LoRA also now unblocks 650M.</li>
   <li><b>Diagnose the antibody-subset inversion</b> before trusting any antibody number: is CDR sequence
   variability being read as noise, or are the loops simply out of distribution for a general protein language
   model? Then, and only then, structural features — relative solvent accessibility and interface contact counts

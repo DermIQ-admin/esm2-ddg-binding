@@ -49,8 +49,8 @@ BLUE, ORANGE, AQUA = "#2a78d6", "#eb6834", "#1baf7a"
 # factor, so 7pt type would reach paper at ~4.5pt and be unreadable. Authoring
 # at size x SCALE lands each label at its nominal size on the page. If the CSS
 # widths change, these change with them.
-S1 = 1.49   # fig1, printed at 67% of the text column
-S2 = 1.17   # fig2, printed at 86%
+S1 = 1.62   # fig1, printed at 57% of the text column
+S2 = 1.27   # fig2, printed at 79%
 
 mpl.rcParams.update({
     "figure.facecolor": SURFACE,

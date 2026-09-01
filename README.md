@@ -7,8 +7,8 @@ performance is leakage.
 **Headline:** on a split that lets the model memorise complexes, fine-tuning scores Spearman
 **0.66**. On an honest complex-level split, the same model scores **0.18**, and a frozen
 backbone with a 0.49M-parameter head does at least as well. On antibody–antigen complexes
-specifically, the fine-tuned model's ranking comes out **anti-correlated** with the
-measurements.
+specifically, fine-tuning is **reliably worse than that frozen probe** (paired over 5
+replicates, p = 0.012).
 
 A three-page summary of the whole project is in
 [`report/esm2-skempi-report.pdf`](report/esm2-skempi-report.pdf).
@@ -80,8 +80,8 @@ maximum, early stopping with patience 3, selecting on **validation Spearman rath
 validation loss** — the two genuinely diverge, because Huber keeps improving absolute
 calibration long after the rank ordering has stopped changing.
 
-On one RTX 4090 (24 GB) a run is **179 s/epoch, ≈25 minutes end to end**; the 15 replicate runs
-behind the tables below are 6.2 GPU-hours in total. 650M was measured and rejected: the siamese
+On one RTX 4090 (24 GB) a run is **181 s/epoch, ≈26 minutes end to end**; the 20 replicate runs
+behind the tables below (15 full fine-tune, 5 LoRA) are 8.5 GPU-hours in total. 650M was measured and rejected: the siamese
 design calls the backbone twice per step, so even with gradient checkpointing it needs 26.9 GB
 against a 24 GB card and runs 33× slower once traffic spills to host memory.
 
@@ -115,17 +115,19 @@ rank order matters more than calibration for screening.
 | Frozen embeddings + ridge | 0.473 ± 0.021 | 0.053 ± 0.057 | 0.122 ± 0.102 |
 | Frozen embeddings + MLP | 0.623 ± 0.024 | **0.223 ± 0.020** | **0.272 ± 0.053** |
 | Fine-tuned ESM-2 150M | **0.660 ± 0.021** | 0.178 ± 0.059 | 0.167 ± 0.091 |
+| LoRA r=8 (1.11M trainable) | not run | 0.211 ± 0.080 | not run |
 
 ![Test Spearman by method under each split definition; bars are the mean of 5 replicates, whiskers ±1 sd](report/figures/fig2_gradient.png)
 
 Reading left to right is reading the cost of an honest split. Note the *within-group* order
 too: on the leaky split more trainable parameters help monotonically; on both honest splits
-that ordering disappears.
+that ordering disappears. LoRA is absent from this figure by design — it was run on
+`split_pdb_id` only, so it has no bars to place in the other two groups.
 
 Zero-shot is a single deterministic run and is ranking-only, so it has no error bars and no RMSE.
 Its numbers are all ≈0 on every split, which is what makes it a free control: the three test sets
-are of similar intrinsic difficulty, so the gaps in the rows below are caused by *training*, not
-by unequal splits.
+are of similar intrinsic difficulty, so the gaps across the other rows are caused by *training*,
+not by unequal splits.
 
 **Fine-tuning wins on exactly one split — the leaky one.** Paired on identical partitions,
 fine-tune minus frozen-MLP probe:
@@ -155,6 +157,47 @@ changes the ranking. ESM-2's masked-marginal is effectively blind to the binding
 scores whether a residue belongs in its chain, not whether it holds an interface together.
 Reproduce with `--context {complex,chain}`.
 
+### LoRA: it fixes the variance it can reach, not the one that matters
+
+Full fine-tuning is 2–4× more variable than the frozen probe, so the obvious lever is to train
+far fewer parameters. LoRA (rank 8 on the query and value projections) trains **1.11M of 148.6M
+— 0.7%**, of which 0.49M is the head. Run on `split_pdb_id` only, on the same five partitions.
+
+It scores **0.211 ± 0.080**, which is not distinguishable from either comparator: −0.013 against
+the frozen probe (p = 0.779) and +0.032 against full fine-tuning (p = 0.545). As a way to raise
+the honest-split number, it does nothing.
+
+**The variance decomposition is the result.** The two replicate axes separate cleanly:
+
+| | training-seed std | split-seed std |
+|---|---|---|
+| Full fine-tune | 0.074 | 0.048 |
+| **LoRA r=8** | **0.014** | 0.093 |
+| Frozen probe | 0.016 | 0.016 |
+
+LoRA cut training-seed variance roughly 5×, down to the frozen probe's level — repeat runs on
+the *same* partition are now nearly reproducible, which is exactly what regularisation should do
+to training stochasticity, and a direct answer to the "0.148 one day, 0.225 the next" problem.
+It did nothing for sensitivity to *which complexes* are held out, and that is the variance that
+actually limits a generalisation claim. Caveat: n = 3 per variance group, so these std estimates
+are unstable (F = 28.5 on (2,2) df, p = 0.068) — suggestive, not established.
+
+**More epochs make it worse, not better.** Three of five LoRA runs hit the 10-epoch cap with
+validation still climbing, which looked like unfair truncation. A 30-epoch probe on the identical
+partition settled it the other way:
+
+| | best epoch | val ρ | test ρ |
+|---|---|---|---|
+| 10 epochs | 9 | 0.393 | **0.137** |
+| 30 epochs | 25 | **0.404** | **0.054** |
+
+Tripling the budget bought +0.011 validation and cost −0.083 test. Validation ρ plateaus by about
+epoch 14 (mean 0.367, sd 0.020 over epochs 14–29) and then wanders; the selected maximum sits 1.8
+sd above that plateau, which is what taking a max over 30 noisy draws produces. Selecting the best
+of more epochs is itself overfitting — here to the ~97 validation complexes. One controlled pair,
+so a strong hint rather than a settled result. Raw history in
+[`results/lora_convergence_probe.json`](results/lora_convergence_probe.json).
+
 Reproduce every number here with `python -m src.replicates`.
 
 ## The antibody–antigen subset
@@ -169,8 +212,14 @@ matters most if you care about binder engineering. Paired, same 5 replicates:
 | paired diff (ft − probe) | **−0.330**, 95% CI [−0.540, −0.119], **p = 0.012** | −0.054, [−0.121, +0.012], p = 0.086 |
 
 On all test rows fine-tuning and the probe are statistically indistinguishable. **On antibody
-complexes they are not: fine-tuning is reliably worse, and its Spearman is below zero** — the
-ranking is anti-correlated with measured ΔΔG. All five replicate pairs are negative.
+complexes they are not: fine-tuning is reliably worse**, by −0.330 (95% CI [−0.540, −0.119],
+p = 0.012), and the paired difference is negative in **all five** replicates.
+
+Its own correlation averages −0.065, below zero — but that absolute claim is **not** supported
+and is not made here: two of the five replicates are positive (+0.027, +0.124) and the mean is
+not distinguishable from zero (95% CI [−0.242, +0.111], p = 0.362). What the five replicates
+support is the *comparison*, not the sign. Pairing is what gives the comparison its power:
+holding the partition fixed removes the split-to-split variance that swamps the raw values.
 
 Three caveats, stated rather than buried:
 
@@ -247,11 +296,18 @@ cd esm2-ddg-binding
 
 python -m venv .venv
 .venv\Scripts\activate
-pip install -r requirements.txt
+
+pip install -r requirements.txt        # NVIDIA GPU, CUDA 13.0
+pip install -r requirements-cpu.txt    # CPU-only
 ```
 
-`requirements.txt` pins the CUDA build of PyTorch via `--extra-index-url`. For a CPU-only
-install, drop that line and the `+cu130` suffix on `torch`.
+The two files differ only in the `torch` line and the `--extra-index-url` above it:
+`requirements.txt` pins the CUDA 13.0 build, which is not on PyPI and needs that extra index.
+For a different CUDA version, swap `cu130` for your channel and match it to your driver.
+
+Training the siamese model on CPU is impractically slow, but **the data pipeline, the tests,
+the evaluation harness and all three notebooks run fine on CPU** — enough to reproduce every
+table in this README from the committed metrics.
 
 Verify the GPU before training — `torch.cuda.is_available()` alone can return True on a broken
 driver/runtime pairing, so this runs a real matmul against the CPU:

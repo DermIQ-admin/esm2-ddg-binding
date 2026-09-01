@@ -35,6 +35,12 @@ wandb/
 # The per-run prediction CSVs are regenerable from the baselines and would
 # otherwise churn ~2MB per experiment, so they are not.
 results/preds_*.csv
+# ...with two exceptions, 304KB total. The zero-shot context ablation (rho = 0.888
+# between scoring a chain alone and inside its complex) is the finding that explains
+# WHY the zero-shot floor is a floor, and notebook 02 cannot recompute it without
+# these. Zero-shot never trains, so they are deterministic and will never churn.
+!results/preds_zero_shot_esm2_t30_150M_UR50D.csv
+!results/preds_zero_shot_esm2_t30_150M_UR50D_context-chain.csv
 # Training logs are transient; the curves that matter live in metrics.json
 # under each run's "training" key.
 train_*.log
