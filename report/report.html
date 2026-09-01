@@ -294,13 +294,15 @@ on the same data rather than as two independent samples:</p>
 </table>
 
 <p><b>The only split on which 148M trainable parameters demonstrably beat a frozen backbone plus a 0.49M head
-is the one that rewards memorisation.</b> The training curves say why. Under the naive split, validation holds
-other mutations of complexes already in training, so validation Spearman climbs for ten straight epochs
-(0.19 → 0.66) and never signals a stop. Under <span class="mono">split_pdb_id</span> it peaks at epoch 3 and
-decays; under the strictest split it peaks at <b>epoch 0</b> and turns negative. Same model, same
-hyperparameters, same data — the only variable is whether the split rewards memorising a complex. The
-diagnosis is ordinary overfitting, not a bug: 148M parameters against 3,374 training rows from 121 complexes,
-ending at train ρ = 0.87 against test ρ = 0.22.</p>
+is the one that rewards memorisation.</b> The training curves say why, across all five replicates rather than
+in one illustrative run. Under the naive split, validation holds other mutations of complexes already in
+training, so the best epoch is the <b>last</b> one in all five runs (val ρ 0.17–0.35 at epoch 0 rising to
+0.62–0.68 at epoch 9) — it never signals a stop. Under <span class="mono">split_pdb_id</span> the best epoch is
+erratic: 3, 3, 7, 9, 9. Under the strictest split, <b>three of five replicates peak at epoch 0</b>, before the
+model has learned anything transferable from the training complexes at all. Same model, same hyperparameters,
+same data — the only variable is whether the split rewards memorising a complex. The diagnosis is ordinary
+overfitting, not a bug: 148M parameters against 3,374 training rows from 121 complexes, ending at train
+ρ = 0.87 against test ρ = 0.22.</p>
 
 <p><b>A second finding worth as much as the first: fine-tuning is 2–4× more variable than the probe</b>
 (sd 0.048–0.113 vs 0.016–0.063), and fixing the random seed does not remove it — the identical configuration

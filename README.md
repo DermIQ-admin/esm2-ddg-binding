@@ -139,11 +139,15 @@ fine-tune minus frozen-MLP probe:
 So: **the only split where 148M trainable parameters demonstrably beat a frozen backbone plus a
 0.49M head is the one that rewards memorisation.**
 
-The training curves say why. Best epoch by split, single-seed illustration: `split_mutation`
-climbs for ten straight epochs (0.19 → 0.66) and never signals a stop; `split_pdb_id` peaks at
-epoch 3 then decays; `split_hold_out_proteins` peaks at **epoch 0** and goes negative. Same
-model, same hyperparameters, same data — the only variable is whether the split rewards
-memorising a complex.
+The training curves say why, and they say it across all five replicates rather than in one
+illustrative run. On `split_mutation` the best epoch is the **last** one in all five (validation
+ρ 0.17–0.35 at epoch 0 rising to 0.62–0.68 at epoch 9): the run never signals a stop, because
+validation holds other mutations of complexes already in training, and memorising an interface
+is indistinguishable from learning ΔΔG. On `split_pdb_id` the best epoch is erratic — 3, 3, 7, 9,
+9 — and early stopping fires before ten epochs in two runs. On `split_hold_out_proteins`
+**three of five replicates peak at epoch 0**: the model is at its best before it has learned
+anything transferable from the training complexes at all. Same model, same hyperparameters, same
+data — the only variable is whether the split rewards memorising a complex.
 
 **Why the zero-shot floor is a floor.** Scoring the mutated chain *alone* and scoring it inside
 the full concatenated complex agree at ρ = **0.888** — deleting the entire binding partner barely
@@ -302,36 +306,54 @@ python -m src.replicates                         # every table in this README
 This is a portfolio project rather than an attempt at state of the art, and the task is well
 studied. The work worth knowing about, and how this repo sits relative to it:
 
-- **Zero-shot PLM scoring** — [Meier et al. 2021 (ESM-1v)](https://www.biorxiv.org/content/10.1101/2021.07.09.450648v1.full)
-  established masking the mutated position and comparing the model's log-probability for mutant
-  vs wild-type residue. Implemented here as the floor, and the context ablation above is a
-  measurement of *why* it is a floor for binding specifically.
-- **[MINT](https://pmc.ncbi.nlm.nih.gov/articles/PMC11956943/)** — adds cross-attention to ESM-2
-  so it can read across two interacting chains instead of encoding them independently. This is
-  the direct answer to the blindness the ρ = 0.888 ablation measures, and the natural next
-  architecture if the mean-pooling fix is not enough.
-- **[AbTune](https://academic.oup.com/bib/article/27/4/bbag374/8732927)** — layer-wise selective
-  fine-tuning of ESM on antibody–antigen complexes. The closest comparison for the antibody
-  subset above, and a concrete instance of the "freeze the lower layers" idea listed under next
-  steps.
-- **[ProBASS](https://pmc.ncbi.nlm.nih.gov/articles/PMC12151015/)** — combines ESM-2 sequence
-  embeddings with structure-conditioned ESM-IF1 embeddings for ΔΔG(binding).
-- **[3D-ΔΔG](https://onlinelibrary.wiley.com/doi/10.1002/prot.26837)**
-  ([code](https://github.com/ShiLab-GitHub/3D-DDG)) — dual-channel model over sequence and 3D
-  structure.
-- **[EJP Lab stability/binding work](https://pmc.ncbi.nlm.nih.gov/articles/PMC12345697/)**
-  ([code](https://github.com/ejp-lab/EJPLab_Computational_Projects/tree/master/ProteinStability/ddG))
-  — fine-tunes PLMs on SKEMPI by passing wild-type and mutant concatenated-chain sequences
-  through the same model, which is essentially the architecture used here, and splits by protein
-  domain specifically to avoid the leakage this repo sets out to measure.
-- **[Seq2Bind](https://academic.oup.com/nargab/article/7/4/lqaf154/8340159)** — fine-tuned
-  ProtBERT, ProtT5, ESM-2 and a BiLSTM on SKEMPI, mainly for binding-site identification.
+- **Zero-shot PLM scoring** — Meier et al. 2021, *[Language models enable zero-shot prediction
+  of the effects of mutations on protein function](https://www.biorxiv.org/content/10.1101/2021.07.09.450648v1.full)*
+  (ESM-1v), established scoring a mutation by the log-odds ratio at the masked mutated
+  position. Implemented here as the floor, and the context ablation above measures *why* it is
+  only a floor for **binding** specifically.
+- **MINT** — Ullanat, Jing, Sledzieski & Berger, *[Learning the language of protein–protein
+  interactions](https://pmc.ncbi.nlm.nih.gov/articles/PMC11956943/)* (Nature Communications,
+  2025). Keeps self-attention within chains and adds cross-chain attention blocks to ESM-2, and
+  reports the strongest sequence-only result on SKEMPI's binding task. This is the direct answer
+  to the blindness the ρ = 0.888 ablation measures, and the natural next architecture if the
+  pooling fix is not enough.
+- **AbTune** — Xu & Bonvin, *[AbTune: layer-wise selective fine-tuning of protein language
+  models for antibodies](https://academic.oup.com/bib/article/27/4/bbag374/8732927)* (Briefings
+  in Bioinformatics, 2026). Finds that depth-selective fine-tuning **consistently beats
+  full-depth fine-tuning**, optimally tuning 50–75% of layers. That is the closest external
+  check on the central result here: full fine-tuning of all 148M parameters failing to beat a
+  frozen backbone is consistent with their finding, and it is why "freeze the lower N layers"
+  is on the next-steps list. Their mutation-effect set is 47 antibody–antigen complexes drawn
+  from SKEMPI v2, AB-Bind and AbDesign, so it is not directly comparable to the AB/AG numbers
+  above.
+- **ProBASS** — Gurusinghe, Wu, DeGrado & Shifman, *[ProBASS — a language model with sequence
+  and structural features for predicting the effect of mutations on binding
+  affinity](https://pmc.ncbi.nlm.nih.gov/articles/PMC12151015/)* (Bioinformatics, 2025).
+  Concatenates ESM-2 sequence embeddings with structural embeddings into a 1,792-feature vector
+  and fits CatBoost, on SKEMPI plus their own measurements.
+- **3D-ΔΔG** — *[A dual-channel prediction model for protein–protein binding affinity changes
+  following mutation based on protein 3D structures](https://onlinelibrary.wiley.com/doi/10.1002/prot.26837)*
+  (Proteins, 2025; [code](https://github.com/ShiLab-GitHub/3D-DDG)). A PLM over the side-chain
+  sequence and a graph attention network over structure, fused in a dual-channel module.
+- **Li et al. 2025** — *[Accurate prediction of protein tertiary and quaternary stability using
+  fine-tuned protein language models and free energy
+  perturbation](https://pmc.ncbi.nlm.nih.gov/articles/PMC12345697/)* (IJMS;
+  [code](https://github.com/ejp-lab/EJPLab_Computational_Projects/tree/master/ProteinStability/ddG)).
+  The closest architectural neighbour: wild-type and mutant concatenated-chain complexes through
+  the same model, and a 70-15-15 split that keeps mutations of the same protein domain in one
+  set. They separate the chains with a dedicated break token; this repo concatenates with none,
+  since ESM-2 has no chain-break token in its vocabulary.
+- **Seq2Bind** — Ma et al., *[Seq2Bind webserver for binding site prediction from sequences using
+  fine-tuned protein language models](https://academic.oup.com/nargab/article/7/4/lqaf154/8340159)*
+  (NAR Genomics and Bioinformatics, 2025). Fine-tunes ProtBERT, ProtT5, ESM-2 and a BiLSTM on
+  SKEMPI 2.0, with binding-site identification as the headline application.
 
-Numbers here are not directly comparable to most of the above, and that is the point worth
-stating plainly: published SKEMPI results are reported under a range of split definitions, and
-the gap measured in this repo (0.66 vs 0.18 from the same model) is large enough to swamp the
-differences between methods. Comparing across papers without first checking how each one built
-its test set is not meaningful.
+**On comparing numbers across these papers.** They report under a range of split definitions,
+and the gap measured here — 0.66 against 0.18 from one model, one dataset and one set of
+hyperparameters — is large enough to swamp the differences between methods. Li et al. above is
+the useful comparison precisely because their split rule is stated and is the same kind as this
+one. Reading a SKEMPI leaderboard without first checking how each entry built its test set is
+not a meaningful exercise, which is the argument this repo exists to make concrete.
 
 ## Data and attribution
 
