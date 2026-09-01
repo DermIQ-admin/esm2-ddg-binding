@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Predicting ΔΔG of protein–protein binding from sequence with ESM-2</title>
+<style>
+  @page { size: A4; margin: 12mm 13mm 10mm 13mm; }
+
+  :root {
+    --ink:        #0b0b0b;
+    --ink-2:      #33322f;
+    --ink-3:      #52514e;
+    --muted:      #7a7975;
+    --rule:       #d8d7d3;
+    --rule-light: #ebeae7;
+    --blue:       #2a78d6;
+    --tint:       #f4f6fa;
+    --flag:       #fff8e1;
+    --flag-edge:  #e8a900;
+  }
+
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  body {
+    margin: 0;
+    font-family: Charter, Georgia, "Times New Roman", serif;
+    font-size: 8.75pt;
+    line-height: 1.315;
+    color: var(--ink-2);
+    hyphens: auto;
+  }
+
+  h1, h2, h3, th, .meta, .caption, .tag, table, .flag-label { font-family: "Segoe UI", -apple-system, Helvetica, Arial, sans-serif; }
+
+  header { border-bottom: 1.6pt solid var(--ink); padding-bottom: 6pt; margin-bottom: 9pt; }
+  h1 { font-size: 15.5pt; line-height: 1.2; margin: 0 0 4pt; color: var(--ink); font-weight: 650; letter-spacing: -0.15pt; }
+  .meta { font-size: 8pt; color: var(--muted); display: flex; gap: 9pt; flex-wrap: wrap; }
+  .meta a { color: var(--muted); text-decoration: none; border-bottom: 0.4pt solid var(--rule); }
+
+  h2 {
+    font-size: 9.9pt; font-weight: 650; color: var(--ink);
+    margin: 8pt 0 2.5pt; padding-bottom: 2pt;
+    border-bottom: 0.5pt solid var(--rule); letter-spacing: -0.05pt;
+  }
+  h2 .tag { font-weight: 400; color: var(--muted); font-size: 7.8pt; letter-spacing: 0; }
+  h3 { font-size: 8.9pt; font-weight: 650; color: var(--ink-2); margin: 7pt 0 2pt; font-family: Charter, Georgia, serif; }
+  p { margin: 0 0 3.8pt; }
+  ul { margin: 0 0 3.5pt; padding-left: 11pt; }
+  li { margin-bottom: 1.3pt; }
+  strong { color: var(--ink); font-weight: 650; }
+  code, .mono { font-family: "Cascadia Mono", Consolas, "SF Mono", monospace; font-size: 7.9pt; color: var(--ink-3); }
+
+  .lede {
+    background: var(--tint); border-left: 2.2pt solid var(--blue);
+    padding: 5.5pt 7pt; margin: 0 0 7pt; font-size: 9.05pt;
+  }
+  .lede p:last-child { margin-bottom: 0; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 7.8pt; margin: 3.5pt 0 2.5pt; font-variant-numeric: tabular-nums; }
+  th { text-align: right; font-weight: 600; color: var(--ink-3); border-bottom: 0.7pt solid var(--ink-3); padding: 2.6pt 4.5pt; vertical-align: bottom; line-height: 1.22; }
+  td { text-align: right; padding: 2.15pt 4.5pt; border-bottom: 0.4pt solid var(--rule-light); color: var(--ink-2); }
+  th:first-child, td:first-child { text-align: left; }
+  tbody tr:last-child td { border-bottom: 0.7pt solid var(--rule); }
+  .best { font-weight: 700; color: var(--ink); }
+  .dim  { color: var(--muted); }
+  .leak-col { background: #faf6f2; }
+
+  figure { margin: 5pt 0 5pt; page-break-inside: avoid; text-align: center; }
+  figure img { display: block; margin: 0 auto; }
+  #fig1 img { width: 67%; }
+  #fig2 img { width: 86%; }
+  .caption { font-size: 7.4pt; color: var(--muted); line-height: 1.36; margin-top: 3pt; text-align: left; }
+  .caption b { color: var(--ink-3); font-weight: 650; }
+
+  /* Grid, not column-count: CSS columns treat the two <dl>s as one flow, which
+     let a page break strand a <dt> label in one column and its <dd> value in
+     the next. A grid keeps each list in its own column. */
+  .spec { display: grid; grid-template-columns: 1fr 1fr; gap: 0 15pt; font-size: 7.95pt; margin: 3pt 0 5pt; }
+  .spec dl { margin: 0; }
+  .spec dt { font-family: "Segoe UI", sans-serif; font-size: 7.3pt; color: var(--muted); text-transform: uppercase; letter-spacing: 0.3pt; margin-top: 3.5pt; break-after: avoid; page-break-after: avoid; }
+  .spec dd { margin: 0; color: var(--ink-2); break-before: avoid; page-break-before: avoid; }
+  .spec dl > *:first-child { margin-top: 0; }
+
+  .flag { background: var(--flag); border: 0.8pt dashed var(--flag-edge); padding: 3pt 5pt; margin: 4pt 0; font-size: 7.6pt; color: #6b5200; line-height: 1.3; }
+  .flag-label { display: block; font-size: 6.8pt; font-weight: 700; letter-spacing: 0.5pt; text-transform: uppercase; color: var(--flag-edge); margin-bottom: 1pt; }
+
+  footer { margin-top: 7pt; padding-top: 3.5pt; border-top: 0.5pt solid var(--rule); font-size: 7.2pt; color: var(--muted); line-height: 1.35; }
+  /* A heading must never be the last thing on a page. */
+  h3 { page-break-after: avoid; break-after: avoid; }
+  .avoid-break { page-break-inside: avoid; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Predicting ΔΔG of protein–protein binding from sequence:<br>
+      how much of a fine-tuned ESM-2's accuracy is leakage?</h1>
+  <div class="meta">
+    <span>Johannes Venezian</span>
+    <span>September 2026</span>
+    <span>Code and full logs: <a href="https://github.com/DermIQ-admin/esm2-ddg-binding">github.com/DermIQ-admin/esm2-ddg-binding</a></span>
+  </div>
+</header>
+
+<div class="lede">
+  <p>Fine-tuning ESM-2 to predict the binding cost of a single interface mutation reaches
+  <b>Spearman ρ = 0.66</b> when the test set is drawn at the mutation level, and <b>ρ = 0.18</b> when no
+  protein complex is allowed to appear in both training and test. On the honest split, 148M fine-tuned
+  parameters are <b>statistically indistinguishable</b> from a frozen backbone with a 0.49M-parameter
+  head (paired over 5 replicates, <i>p</i> = 0.23). The 3.7× gap between the two split definitions is
+  the result this report is about.</p>
+</div>
+
+<h2>1. Problem <span class="tag">— and why it is a reasonable proxy for antibody optimization</span></h2>
+
+<p>ΔΔG of binding is the quantity an affinity-maturation campaign searches over:
+ΔΔG = ΔG<sub>mut</sub> − ΔG<sub>WT</sub>, with ΔG = RT·ln K<sub>d</sub>, so positive means the mutation
+weakens the interface. Ranking candidate interface substitutions by predicted ΔΔG is the primitive a
+binder-engineering loop needs before committing to expression and SPR: it need not be calibrated in
+kcal/mol, it has to put the right mutations at the top of the list — which is why <b>Spearman is the
+primary metric here, with RMSE reported alongside rather than instead</b>. The sequence-only formulation
+is the deliberately harder and more useful one, since it applies to the many antibody–antigen pairs with
+no solved co-crystal, and SKEMPI 2.0 makes it measurable: experimental K<sub>d</sub> for wild-type and
+mutant complexes of known structure.</p>
+
+<div class="flag">
+  <span class="flag-label">To write — the link to your own interface-energetics work</span>
+  Two or three sentences on what your published work established experimentally, and why a sequence-only
+  learned model is the complementary question rather than a restatement of it. Left blank deliberately.
+</div>
+
+<h2>2. Data, and the split that decides everything</h2>
+
+<p><b>Dataset.</b> SKEMPI 2.0 ships 7,085 mutation records; restricting to single-point mutations leaves
+5,112. A further <b>127 rows are dropped because their affinity is a bound, not a measurement</b> —
+SKEMPI's convenience columns <span class="mono">Affinity_*_parsed</span> strip the leading
+<span class="mono">&lt;</span> or <span class="mono">&gt;</span> and return a bare number, so filtering on
+missing values alone silently keeps "no detectable binding" entries as if they were real K<sub>d</sub>.
+The filter runs against the raw affinity columns, where the marker survives. Dropping 156 further rows with
+unusable K<sub>d</sub> gives <b>4,829 mutations across 316 complexes</b>. Sequences are reconstructed per
+complex from the residue-mapping files SKEMPI ships with each structure; the wild-type residue named by each
+mutation code matches the reconstruction for <b>5,112 / 5,112 rows (100%)</b>, asserted at parse time because
+an off-by-one here is what this pipeline is most exposed to. A ≤2,048-token length policy then excludes two
+large multi-chain assemblies, leaving <b>4,814 mutations across 314 complexes</b>. Labels skew hard toward
+destabilization (3,612 positive vs 1,050 negative; mean +0.96, median +0.56, sd 1.71 kcal/mol) with <b>11.0%
+of rows beyond |ΔΔG| &gt; 3</b> — hence Huber loss rather than MSE.</p>
+
+<p><b>The split. This is what determines whether any number below means anything.</b> Mutations of the
+same complex are highly correlated — SKEMPI contains dozens of alanine scans of the same interface. Under
+a random row-level partition, nearly every complex in the test set also appears in training, so the model
+can memorise a complex from its training mutations and then "predict" held-out mutations of that same
+interface. Memorising and learning ΔΔG become indistinguishable, and both register as progress. <b>This
+project therefore partitions groups, never rows</b>, and reports three definitions side by side rather
+than choosing one:</p>
+
+<table class="avoid-break">
+  <thead>
+    <tr><th style="width:27%">Split definition</th><th style="width:10%">Groups</th><th style="width:63%">What it holds out</th></tr>
+  </thead>
+  <tbody>
+    <tr class="leak-col"><td><span class="mono">split_mutation</span></td><td class="dim">—</td>
+      <td>Naive row-level partition. <b>Leaks by construction.</b> Reported as the contrast case, never the headline.</td></tr>
+    <tr><td><span class="mono">split_pdb_id</span></td><td>313</td>
+      <td>Whole structures. The literal reading of "no complex in two splits".</td></tr>
+    <tr><td><span class="mono">split_hold_out_proteins</span></td><td>152</td>
+      <td>SKEMPI's curated protein-pair grouping. Strictest — also catches one protein pair appearing under several PDB entries.</td></tr>
+  </tbody>
+</table>
+
+<p>Assignment is size-aware rather than a uniform sample of groups: SKEMPI's group sizes span three orders
+of magnitude, and sampling uniformly produced a 4.7% validation set where 15% was intended — too thin to
+select a model on. Groups are instead shuffled under a fixed seed, taken largest-first, and each given to
+whichever split is furthest below its row target, landing all three definitions at 70.0 / 15.0 / 15.0 by
+row count with groups kept atomic. The invariant is therefore structural rather than merely tested, and it
+is also tested: 14 <span class="mono">pytest</span> cases assert that no group crosses a split boundary.
+<b>The cost of size-aware assignment, stated rather than buried:</b> filling <span class="mono">train</span>
+first sends the large, well-studied complexes there (121 training complexes vs ~96 each in val and test),
+so val and test hold smaller, less-studied ones — arguably the realistic generalization target, but a
+structured train/test difference rather than a purely random one.</p>
+
+<h2>3. Model and setup</h2>
+
+<p>A <b>siamese ESM-2</b>: one shared backbone encodes the wild-type and the mutant complex. Weight sharing
+is the point — it puts both embeddings in one space, so their difference is meaningful. Each is mask-aware
+mean-pooled, and the head sees <span class="mono">concat[wt, mut, mut − wt]</span>, since ΔΔG is a question
+about what changed. Both partner chains are concatenated into one sequence, so the backbone sees both sides
+of the interface at once.</p>
+
+<div class="spec">
+  <dl>
+    <dt>Backbone</dt><dd><span class="mono">facebook/esm2_t30_150M_UR50D</span> — 30 layers, hidden 640</dd>
+    <dt>Head</dt><dd>Linear(1920→256) → ReLU → Dropout(0.1) → Linear(256→1)</dd>
+    <dt>Trainable parameters</dt><dd><b>148.6M, full fine-tune</b> — of which the head is 0.49M</dd>
+    <dt>Loss / optimizer</dt><dd>Huber δ = 1.0; AdamW, lr 2×10⁻⁵, no schedule</dd>
+    <dt>Precision</dt><dd>bf16 autocast, no GradScaler (bf16 keeps fp32's exponent range)</dd>
+  </dl>
+  <dl>
+    <dt>Batching</dt><dd>By <b>token budget</b> — 4,096 padded tokens, not a fixed example count</dd>
+    <dt>Epochs / selection</dt><dd>≤10, early stopping patience 3; best <b>validation Spearman</b>, not val loss</dd>
+    <dt>Hardware</dt><dd>1× RTX 4090 24 GB, Windows 11, PyTorch 2.13 / CUDA 13.0</dd>
+    <dt>Wall clock</dt><dd><b>179 s/epoch, ≈25 min per run</b>; 6.2 GPU-hours for all 15 replicate runs</dd>
+    <dt>Replicates</dt><dd>5 per method per split — 3 training seeds at fixed partition, 3 split seeds at fixed training seed</dd>
+  </dl>
+</div>
+
+<p><b>Full fine-tuning rather than LoRA, and 150M rather than 650M — both measured, not assumed.</b> 150M full
+peaks at 10.9 GB; 650M needs 26.9 GB on a 24 GB card even with gradient checkpointing, because the siamese
+design calls the backbone twice per step, and runs <b>33× slower</b> once traffic spills to host memory —
+silently, since CUDA on Windows falls back to shared system memory rather than raising
+<span class="mono">OutOfMemoryError</span>. Two baselines keep the fine-tuned model from failing silently:
+zero-shot masked-marginal scoring fixes the floor, a frozen backbone with a trained head measures what the
+pretrained representation already knows. And because the three split definitions disagree about which rows are
+held out, <b>a separate model is trained per definition</b>, with the harness marking the other two contaminated.</p>
+
+<figure id="fig1">
+  <img src="figures/fig1_scatter.png" alt="Predicted versus measured ΔΔG for three model and split combinations">
+  <div class="caption">
+    <b>Figure 1 — the same model, the same data, two split definitions.</b> Predicted vs measured ΔΔG on
+    held-out test rows; the diagonal is <i>y</i> = <i>x</i>. <b>Left:</b> the naive split, where the same complexes
+    appear in training. <b>Centre:</b> identical model and hyperparameters under a complex-level split — the
+    prediction range collapses toward the training mean, which is what ρ = 0.20 looks like. <b>Right:</b> a frozen
+    backbone with a 0.49M head on the same partition, matching it. Panels show the <b>median</b> of five replicates,
+    not the best; the probe is drawn on the same partition as the fine-tuned model beside it.
+  </div>
+</figure>
+
+<h2>4. Results <span class="tag">— test Spearman ρ, mean ± sd over 5 replicates</span></h2>
+
+<table class="avoid-break">
+  <thead>
+    <tr>
+      <th style="width:31%">Model</th>
+      <th style="width:11%">Trainable<br>params</th>
+      <th style="width:19%" class="leak-col"><span class="mono">split_mutation</span><br>naive — leaks</th>
+      <th style="width:19%"><span class="mono">split_pdb_id</span><br>honest</th>
+      <th style="width:20%"><span class="mono">split_hold_out_proteins</span><br>honest, strictest</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Zero-shot ESM-2 150M <span class="dim">(masked-marginal)</span></td>
+      <td class="dim">0</td><td class="leak-col dim">−0.082</td><td class="dim">+0.005</td><td class="dim">−0.097</td>
+    </tr>
+    <tr>
+      <td>Frozen ESM-2 + ridge</td>
+      <td class="dim">1.9K</td><td class="leak-col">0.473 ± 0.021</td><td>0.053 ± 0.057</td><td>0.122 ± 0.102</td>
+    </tr>
+    <tr>
+      <td>Frozen ESM-2 + MLP head</td>
+      <td class="dim">0.49M</td><td class="leak-col">0.623 ± 0.024</td><td class="best">0.223 ± 0.020</td><td class="best">0.272 ± 0.053</td>
+    </tr>
+    <tr>
+      <td><b>Fine-tuned ESM-2 150M</b></td>
+      <td class="dim">148.6M</td><td class="leak-col best">0.660 ± 0.021</td><td>0.178 ± 0.059</td><td>0.167 ± 0.091</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Zero-shot is a single deterministic, ranking-only run, so it has no error bars — but its flatness is the control
+that matters: <b>the three test sets are of similar intrinsic difficulty</b>, so the gaps across the columns come
+from training, not from one split being easier. That floor is explained rather than merely reported: scoring the
+mutated chain <i>alone</i> and inside the full complex agree at ρ = 0.888, so ESM-2's masked-marginal is blind to
+the binding partner — it scores whether a residue belongs in its chain, not whether it holds an interface together.</p>
+
+<figure id="fig2">
+  <img src="figures/fig2_gradient.png" alt="Test Spearman by method and split definition, with replicate error bars">
+  <div class="caption">
+    <b>Figure 2 — the leakage gradient.</b> Test Spearman by method under each split definition; bars are the
+    mean of 5 replicates, whiskers ±1 sd. Note the <i>within-group</i> order too: on the leaky split more
+    trainable parameters help monotonically; on both honest splits that ordering disappears.
+  </div>
+</figure>
+
+<h3>Fine-tuning wins on exactly one split — the leaky one</h3>
+
+<p>Replicates are paired on identical partitions, so this compares fine-tuning against the frozen MLP probe
+on the same data rather than as two independent samples:</p>
+
+<table class="avoid-break">
+  <thead>
+    <tr>
+      <th style="width:30%">Split definition</th><th style="width:15%">Mean Δρ<br>(fine-tune − probe)</th>
+      <th style="width:19%">95% CI</th><th style="width:9%"><i>p</i></th><th style="width:27%">Verdict</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="leak-col"><td><span class="mono">split_mutation</span> <span class="dim">(leaks)</span></td>
+      <td class="best">+0.038</td><td>[+0.003, +0.072]</td><td class="best">0.038</td><td>Fine-tuning genuinely better</td></tr>
+    <tr><td><span class="mono">split_pdb_id</span></td>
+      <td>−0.045</td><td>[−0.133, +0.043]</td><td>0.229</td><td>Not distinguishable</td></tr>
+    <tr><td><span class="mono">split_hold_out_proteins</span></td>
+      <td>−0.105</td><td>[−0.256, +0.045]</td><td>0.124</td><td>Not distinguishable</td></tr>
+  </tbody>
+</table>
+
+<p><b>The only split on which 148M trainable parameters demonstrably beat a frozen backbone plus a 0.49M head
+is the one that rewards memorisation.</b> The training curves say why. Under the naive split, validation holds
+other mutations of complexes already in training, so validation Spearman climbs for ten straight epochs
+(0.19 → 0.66) and never signals a stop. Under <span class="mono">split_pdb_id</span> it peaks at epoch 3 and
+decays; under the strictest split it peaks at <b>epoch 0</b> and turns negative. Same model, same
+hyperparameters, same data — the only variable is whether the split rewards memorising a complex. The
+diagnosis is ordinary overfitting, not a bug: 148M parameters against 3,374 training rows from 121 complexes,
+ending at train ρ = 0.87 against test ρ = 0.22.</p>
+
+<p><b>A second finding worth as much as the first: fine-tuning is 2–4× more variable than the probe</b>
+(sd 0.048–0.113 vs 0.016–0.063), and fixing the random seed does not remove it — the identical configuration
+produced 0.148 and 0.225 on two different days, from CUDA kernel nondeterminism alone. A single fine-tuning
+run of this model is not a reportable number, which is why everything above is a 5-replicate mean.</p>
+
+<h3>The antibody–antigen subset</h3>
+
+<p>SKEMPI labels antibody–antigen complexes, so this breakdown is free — and it is the subset that matters most
+for binder engineering. It was pre-specified before any results existed, making it a planned comparison rather
+than a subgroup found by searching.</p>
+
+<table class="avoid-break">
+  <thead>
+    <tr>
+      <th style="width:38%">AB/AG test rows only <span class="dim">(189–230 rows)</span></th>
+      <th style="width:31%"><span class="mono">split_pdb_id</span> — honest</th>
+      <th style="width:31%" class="leak-col"><span class="mono">split_mutation</span> — leaks</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>Frozen ESM-2 + MLP head</td><td class="best">+0.264 ± 0.052</td><td class="leak-col">+0.551 ± 0.042</td></tr>
+    <tr><td>Fine-tuned ESM-2 150M</td><td class="best">−0.065 ± 0.142</td><td class="leak-col">+0.497 ± 0.083</td></tr>
+    <tr><td>Paired difference <span class="dim">(fine-tune − probe)</span></td>
+      <td><b>−0.330</b>, [−0.540, −0.119], <i>p</i> = 0.012</td>
+      <td class="leak-col dim">−0.054, [−0.121, +0.012], <i>p</i> = 0.086</td></tr>
+  </tbody>
+</table>
+
+<p>Across all test rows, fine-tuning and the frozen probe are indistinguishable. <b>On antibody complexes they
+are not: fine-tuning is reliably worse, and its Spearman is below zero</b> — the ranking is anti-correlated
+with measured ΔΔG, in all five replicate pairs. Two caveats belong with it: the strictest split holds only 6 AB/AG
+test rows against a 10-row minimum, so the harness omits the metric there and the claim rests on
+<span class="mono">split_pdb_id</span> alone; and it is one subgroup among several in the error analysis — a
+pre-registered signal, not a confirmed mechanism.</p>
+
+<h2>5. Limitations</h2>
+
+<ul>
+  <li><b>The honest numbers are modest (ρ ≈ 0.17–0.27), and they are the reported result.</b> A correctly
+  attributed number on an honest split is worth more than an inflated one; the 0.66 is included to show what a
+  split choice is worth.</li>
+  <li><b>Sequence-only</b>, although SKEMPI ships structures, and <b>single-point only</b>, dropping 1,973
+  multi-point rows, so nothing here speaks to epistasis. No comparison against FoldX-style physics-based
+  methods on their own terms is attempted.</li>
+  <li><b>Mean-pooling discards position</b> — a whole-sequence mean is a weak signal for a change of one residue
+  in up to 2,048, plausibly the largest architectural limitation here. Separately, <b>127 inequality rows are
+  dropped rather than used</b> (censored regression would use them properly), and val/test hold smaller,
+  less-studied complexes as a side effect of size-aware assignment (§2).</li>
+  <li><b>Rows between 1,024 and 2,048 tokens (1.6%) exceed ESM-2's pretraining crop;</b> rotary embeddings
+  extrapolate, but quality there is not guaranteed. Truncation was rejected because at a 1,024 cap the mutation
+  site falls outside the window for 77 rows, making <span class="mono">mut − wt</span> exactly zero while the
+  model still trains against a real label — a silent failure rather than a loud one.</li>
+</ul>
+
+<h2>6. Next steps <span class="tag">— the model overfits and is unstable, so the goal is to cut variance, not only to raise the mean</span></h2>
+
+<ul>
+  <li><b>Position-specific pooling at the mutated residue,</b> concatenated with the mean-pooled context; the
+  dataset already carries the token index for it. Targets the limitation the honest splits expose most directly,
+  and is the highest-value single change.</li>
+  <li><b>LoRA on the 150M backbone as regularisation</b> — a small adapter should shrink the replicate spread that
+  makes single runs unreportable, and it doubles as the prerequisite for 650M, which does not fit on this card
+  under full fine-tuning. Alongside it, a lower learning rate or freezing the lower N layers, aimed at the epoch-0
+  peak on the strictest split.</li>
+  <li><b>Diagnose the antibody-subset inversion</b> before trusting any antibody number: is CDR sequence
+  variability being read as noise, or are the loops simply out of distribution for a general protein language
+  model? Then, and only then, structural features — relative solvent accessibility and interface contact counts
+  are cheap given SKEMPI's structures, and would test whether the ceiling is the representation or the task.</li>
+</ul>
+
+<div class="flag">
+  <span class="flag-label">To write — related work, in your own words, with links</span>
+  One paragraph positioning against MINT, ProBASS, AbTune, Seq2Bind and 3D-ΔΔG — AbTune is the natural comparison,
+  being antibody-focused, which makes §4's AB/AG numbers the place to compare. Worth checking rather than
+  asserting: which of them report on complex-level rather than mutation-level splits.
+</div>
+
+<footer>
+  Data: SKEMPI 2.0 (Jankauskaitė et al., <i>Bioinformatics</i> 2019), life.bsc.es/pid/skempi2 — verify
+  redistribution terms before publishing the processed tables. Weights: <span class="mono">facebook/esm2_t30_150M_UR50D</span>.
+  Every figure and table here regenerates from <span class="mono">results/metrics.json</span> via
+  <span class="mono">report/make_figures.py</span> and <span class="mono">python -m src.replicates</span>.
+</footer>
+
+</body>
+</html>
