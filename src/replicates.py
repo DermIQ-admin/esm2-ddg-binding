@@ -238,6 +238,18 @@ def main() -> None:
           "complexes. The second\n  is the one that decides whether a difference "
           "between methods is real.")
     paired_comparison(runs, "spearman", "ALL TEST ROWS")
+
+    # LoRA asks two separate questions, and only printing them once LoRA runs
+    # exist keeps the output honest before the experiment has been done.
+    #   vs the probe     -- does adapting 0.7% of the weights beat training none?
+    #   vs full fine-tune -- is the instability of full fine-tuning worth fixing
+    #                        this way, or does capacity turn out to be the point?
+    if any(method_family(r["method"])[0] == "finetune_lora" for r in runs):
+        paired_comparison(runs, "spearman", "LORA vs FROZEN PROBE",
+                          challenger="finetune_lora", baseline="linear_probe_mlp")
+        paired_comparison(runs, "spearman", "LORA vs FULL FINE-TUNE",
+                          challenger="finetune_lora", baseline="finetune")
+
     summarize_antibody(runs)
     paired_comparison(runs, "antibody_spearman", "ANTIBODY / ANTIGEN ROWS ONLY")
     print("\n  The AB/AG subset was pre-specified before any results\n"
